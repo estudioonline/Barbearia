@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0a0a0a">
+  <title>Jaimess Barbearia | Agendamento</title>
+  <meta name="description" content="Agende seu horário na Jaimess Barbearia. Corte, barba e acabamento com horário marcado.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Oswald:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="topbar">
+  <a class="brand" href="#inicio" aria-label="Jaimess Barbearia">
+    <span class="brand-badge">J</span>
+    <span><strong>JAIMESS</strong><small>BARBEARIA</small></span>
+  </a>
+  <nav>
+    <a href="#servicos">Serviços</a>
+    <a href="#profissionais">Profissionais</a>
+    <a href="#contato">Contato</a>
+    <button class="btn btn-outline" id="adminOpen">Área do barbeiro</button>
+  </nav>
+</header>
+
+<main>
+  <section class="hero" id="inicio">
+    <div class="hero-overlay"></div>
+    <div class="hero-inner">
+      <p class="kicker">BARBEARIA • ESTILO • PONTUALIDADE</p>
+      <h1>Seu estilo.<br>Seu horário.</h1>
+      <p class="hero-copy">Agende seu atendimento em poucos passos. Escolha o serviço, o profissional e o melhor horário para você.</p>
+      <div class="hero-actions">
+        <button class="btn btn-white btn-lg" data-book>Agendar agora</button>
+        <a class="btn btn-dark btn-lg" href="#servicos">Ver serviços</a>
+      </div>
+      <div class="hero-info">
+        <div><b>Seg–Sáb</b><span>09h às 19h</span></div>
+        <div><b>Online</b><span>Agendamento rápido</span></div>
+        <div><b>Fácil</b><span>Funciona no celular</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section intro">
+    <p class="kicker dark">ATENDIMENTO PROFISSIONAL</p>
+    <h2>Sem fila. Sem complicação.</h2>
+    <p>Uma experiência simples para quem quer cuidar do visual e do tempo.</p>
+  </section>
+
+  <section class="section gray" id="servicos">
+    <div class="section-title">
+      <div><p class="kicker dark">SERVIÇOS</p><h2>Escolha seu atendimento</h2></div>
+      <p>Valores iniciais de demonstração. Depois podemos editar nome, preço e duração.</p>
+    </div>
+    <div class="service-grid" id="serviceGrid"></div>
+  </section>
+
+  <section class="section" id="profissionais">
+    <div class="section-title">
+      <div><p class="kicker dark">PROFISSIONAIS</p><h2>Escolha seu barbeiro</h2></div>
+      <p>Cada profissional pode ter sua própria agenda e disponibilidade.</p>
+    </div>
+    <div class="barber-grid" id="barberGrid"></div>
+  </section>
+
+  <section class="booking-banner">
+    <div><p class="kicker">AGENDE EM MINUTOS</p><h2>Pronto para renovar o visual?</h2><p>Escolha um horário disponível e confirme seu atendimento.</p></div>
+    <button class="btn btn-white btn-lg" data-book>Escolher horário</button>
+  </section>
+
+  <section class="section gray contact" id="contato">
+    <div>
+      <p class="kicker dark">CONTATO</p>
+      <h2>Informações da barbearia</h2>
+      <p class="muted">Os dados abaixo são demonstrativos e podem ser substituídos pelos dados reais.</p>
+    </div>
+    <div class="contact-card">
+      <div><span>Horário</span><strong>Segunda a sábado • 09h às 19h</strong></div>
+      <div><span>WhatsApp</span><strong>(00) 00000-0000</strong></div>
+      <div><span>Endereço</span><strong>Adicionar endereço da barbearia</strong></div>
+    </div>
+  </section>
+</main>
+
+<footer><span>© <span id="year"></span> Jaimess Barbearia</span><span>Agendamento online</span></footer>
+
+<div class="modal" id="bookingModal" aria-hidden="true">
+  <div class="modal-card">
+    <button class="modal-close" data-close-book aria-label="Fechar">×</button>
+    <p class="kicker dark">NOVO AGENDAMENTO</p>
+    <h2>Reserve seu horário</h2>
+    <div class="progress"><span class="active" data-dot="1">1</span><i></i><span data-dot="2">2</span><i></i><span data-dot="3">3</span></div>
+
+    <form id="bookingForm">
+      <div class="form-step active" data-step="1">
+        <label>Serviço<select id="serviceSelect" required></select></label>
+        <label>Profissional<select id="barberSelect" required></select></label>
+        <div class="form-actions end"><button type="button" class="btn btn-black" data-next>Continuar</button></div>
+      </div>
+
+      <div class="form-step" data-step="2">
+        <label>Data<input id="dateInput" type="date" required></label>
+        <div>
+          <span class="field-label">Horários disponíveis</span>
+          <div class="slots" id="slots"></div>
+          <input id="timeInput" type="hidden" required>
+        </div>
+        <div class="form-actions"><button type="button" class="btn btn-light" data-back>Voltar</button><button type="button" class="btn btn-black" data-next>Continuar</button></div>
+      </div>
+
+      <div class="form-step" data-step="3">
+        <label>Seu nome<input id="nameInput" type="text" placeholder="Nome completo" required></label>
+        <label>WhatsApp<input id="phoneInput" type="tel" placeholder="(00) 00000-0000" required></label>
+        <div class="summary" id="summary"></div>
+        <div class="form-actions"><button type="button" class="btn btn-light" data-back>Voltar</button><button type="submit" class="btn btn-black">Confirmar</button></div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="modal" id="successModal" aria-hidden="true">
+  <div class="modal-card success">
+    <div class="check">✓</div>
+    <h2>Agendamento confirmado</h2>
+    <p id="successText"></p>
+    <button class="btn btn-black" data-close-success>Concluir</button>
+  </div>
+</div>
+
+<div class="modal" id="adminModal" aria-hidden="true">
+  <div class="modal-card admin-card">
+    <button class="modal-close" data-close-admin aria-label="Fechar">×</button>
+    <div id="adminLogin">
+      <p class="kicker dark">ÁREA DO BARBEIRO</p>
+      <h2>Acessar agenda</h2>
+      <p class="muted">Painel demonstrativo desta primeira versão.</p>
+      <form id="loginForm">
+        <label>E-mail<input id="adminEmail" type="email" placeholder="admin@barbearia.com" required></label>
+        <label>Senha<input id="adminPass" type="password" placeholder="••••••••" required></label>
+        <button class="btn btn-black full" type="submit">Entrar</button>
+      </form>
+      <small class="hint">Acesso de teste: admin@barbearia.com / 123456</small>
+    </div>
+    <div id="adminPanel" class="hidden">
+      <div class="admin-head"><div><p class="kicker dark">AGENDA</p><h2>Horários marcados</h2></div><button class="btn btn-light" id="logout">Sair</button></div>
+      <div id="appointmentList" class="appointments"></div>
+    </div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
