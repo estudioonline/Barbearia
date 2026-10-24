@@ -7,15 +7,12 @@ const services=[
 const barbers=[{id:'liedson',name:'Liedson',specialty:'Proprietário e barbeiro • cortes, barba e acabamento'}];
 const API='https://hncpyfvyffawdveidikl.supabase.co/functions/v1/barbearia-booking';
 const API_KEY='sb_publishable_vuoGNU0lSuM9Trm7RqCoQQ_LyedLwMb';
-const LIEDSON_WHATSAPP='5561992591846';
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 const money=n=>n.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
-const localKey='barbearia_liedson_confirmados_v3';
-const getLocal=()=>{try{return JSON.parse(localStorage.getItem(localKey)||'[]')}catch{return[]}};
-const saveLocal=v=>localStorage.setItem(localKey,JSON.stringify(v));
 const fmtDate=v=>new Date(v+'T12:00:00').toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'2-digit'});
 const toMinutes=t=>{const [h,m]=t.split(':').map(Number);return h*60+m};
 const fromMinutes=m=>String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0');
+let adminPin='';
 
 function render(){
  $('#serviceGrid').innerHTML=services.map((s,i)=>`<article class="service-card"><div class="service-number">0${i+1}</div><h3>${s.name}</h3><p>${s.desc}</p><div class="service-bottom"><strong>${money(s.price)}</strong><span>${s.duration} min</span></div></article>`).join('');
@@ -29,11 +26,16 @@ function closeModal(id){$(id).classList.remove('show');$(id).setAttribute('aria-
 let step=1;
 function setStep(n){step=n;$$('.form-step').forEach(x=>x.classList.toggle('active',+x.dataset.step===n));$$('[data-dot]').forEach(x=>x.classList.toggle('active',+x.dataset.dot<=n));if(n===3)summary()}
 function resetBooking(){$('#bookingForm').reset();$('#barberSelect').value='liedson';$('#slots').innerHTML='';$('#timeInput').value='';setStep(1)}
+async function api(body){
+ const res=await fetch(API,{method:'POST',headers:{'Content-Type':'application/json',apikey:API_KEY},body:JSON.stringify(body)});
+ const data=await res.json();
+ if(!res.ok) throw new Error(data.error||'Não foi possível concluir a operação.');
+ return data;
+}
 async function getBusy(date){
  const res=await fetch(API+'?date='+encodeURIComponent(date),{headers:{apikey:API_KEY}});
  if(!res.ok) throw new Error('Não foi possível consultar a agenda.');
- const data=await res.json();
- return data.busy||[];
+ const data=await res.json(); return data.busy||[];
 }
 function overlaps(start,duration,busy){
  const a=toMinutes(start),b=a+duration;
@@ -53,7 +55,7 @@ async function slots(){
    $('#slots').innerHTML=all.map(t=>`<button type="button" class="slot ${overlaps(t,service.duration,busy)?'busy':''}" data-time="${t}">${t}</button>`).join('');
    $$('.slot:not(.busy)').forEach(b=>b.onclick=()=>{$$('.slot').forEach(x=>x.classList.remove('selected'));b.classList.add('selected');$('#timeInput').value=b.dataset.time});
    if(!$$('.slot:not(.busy)').length) $('#slots').innerHTML='<span class="muted">Não há horários disponíveis para este dia.</span>';
- }catch(err){$('#slots').innerHTML='<span class="muted">Não foi possível carregar os horários. Tente novamente.</span>'}
+ }catch{$('#slots').innerHTML='<span class="muted">Não foi possível carregar os horários. Tente novamente.</span>'}
 }
 function summary(){
  const s=services.find(x=>x.id===$('#serviceSelect').value);
@@ -64,12 +66,32 @@ function valid(){
  if(step===2&&(!$('#dateInput').value||!$('#timeInput').value)){alert('Escolha a data e um horário disponível.');return false}
  return true
 }
-function renderAdmin(){
- const items=getLocal().sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time));
- $('#appointmentList').innerHTML=items.length?items.map(a=>{
-   const s=services.find(x=>x.id===a.service);
-   return`<div class="appointment"><div><strong>${fmtDate(a.date)} • ${a.time} — ${a.name}</strong><small>${s?.name||a.service} com Liedson • ${a.duration||s?.duration||50} min<br>${a.phone}</small></div></div>`
- }).join(''):'<div class="empty">Nenhum agendamento confirmado neste navegador.</div>';
+async function loadAdmin(){
+ $('#appointmentList').innerHTML='<div class="empty">Carregando agenda...</div>';
+ try{
+   const data=await api({action:'admin-list',pin:adminPin});
+   const items=data.appointments||[];
+   $('#appointmentList').innerHTML=items.length?items.map(a=>{
+     const s=services.find(x=>x.id===a.service_id);
+     const time=fromMinutes(a.start_minute);
+     const done=a.status==='concluido';
+     return `<div class="appointment ${done?'completed':''}">
+       <div>
+         <div class="appt-top"><strong>${fmtDate(a.appointment_date)} • ${time} — ${a.customer_name}</strong><span class="status ${done?'done':'pending'}">${done?'Concluído':'Agendado'}</span></div>
+         <small>${s?.name||a.service_id} • ${a.duration_minutes} min<br>WhatsApp: ${a.phone}</small>
+       </div>
+       ${done?'':`<button class="complete-btn" data-complete="${a.id}">Concluir atendimento</button>`}
+     </div>`;
+   }).join(''):'<div class="empty">Nenhum agendamento encontrado.</div>';
+   $$('[data-complete]').forEach(btn=>btn.onclick=async()=>{
+     if(!confirm('Marcar este atendimento como concluído?')) return;
+     btn.disabled=true;btn.textContent='Salvando...';
+     try{await api({action:'complete',pin:adminPin,id:btn.dataset.complete});await loadAdmin()}
+     catch(err){alert(err.message);btn.disabled=false;btn.textContent='Concluir atendimento'}
+   });
+ }catch(err){
+   $('#appointmentList').innerHTML=`<div class="empty">${err.message}</div>`;
+ }
 }
 $$('[data-book]').forEach(b=>b.onclick=()=>{resetBooking();openModal('#bookingModal')});
 $('[data-close-book]').onclick=()=>closeModal('#bookingModal');
@@ -82,32 +104,28 @@ $('#bookingForm').onsubmit=async e=>{
  e.preventDefault();
  const s=services.find(x=>x.id===$('#serviceSelect').value);
  const a={service:s.id,date:$('#dateInput').value,time:$('#timeInput').value,name:$('#nameInput').value.trim(),phone:$('#phoneInput').value.trim()};
- const submit=e.submitter; if(submit){submit.disabled=true;submit.textContent='Confirmando...'}
+ const submit=e.submitter;if(submit){submit.disabled=true;submit.textContent='Confirmando...'}
  try{
-   const res=await fetch(API,{method:'POST',headers:{'Content-Type':'application/json',apikey:API_KEY},body:JSON.stringify(a)});
-   const data=await res.json();
-   if(!res.ok) throw new Error(data.error||'Não foi possível concluir o agendamento.');
-   const confirmed={...a,id:data.appointment?.id||String(Date.now()),barber:'liedson',duration:s.duration};
-   const local=getLocal();local.push(confirmed);saveLocal(local);
-   const confirmText=`Olá, Liedson! Sou ${a.name}. Acabei de agendar ${s.name} para ${fmtDate(a.date)} às ${a.time}. Meu WhatsApp é ${a.phone}.`;
-   const whatsappUrl='https://wa.me/'+LIEDSON_WHATSAPP+'?text='+encodeURIComponent(confirmText);
-   const wa=$('#whatsappConfirm');
-   if(wa){
-     wa.href=whatsappUrl;
-     wa.style.display='inline-flex';
-   }
-   $('#successText').textContent=`${a.name}, seu ${s.name} na Barbearia Liedson está marcado para ${fmtDate(a.date)} às ${a.time}. Agora vamos abrir o WhatsApp para avisar o Liedson.`;
+   await api(a);
+   $('#successText').textContent=`${a.name}, seu ${s.name} na Barbearia Liedson está agendado para ${fmtDate(a.date)} às ${a.time}. Seu horário foi reservado com sucesso.`;
    closeModal('#bookingModal');openModal('#successModal');
-   setTimeout(()=>{window.location.href=whatsappUrl},900);
- }catch(err){
-   alert(err.message||'Não foi possível concluir o agendamento.');
-   setStep(2);await slots();
- }finally{if(submit){submit.disabled=false;submit.textContent='Confirmar'}}
+ }catch(err){alert(err.message);setStep(2);await slots()}
+ finally{if(submit){submit.disabled=false;submit.textContent='Confirmar'}}
 };
 $('[data-close-success]').onclick=()=>closeModal('#successModal');
-$('#adminOpen').onclick=()=>{openModal('#adminModal');$('#adminLogin').classList.remove('hidden');$('#adminPanel').classList.add('hidden')};
+$('#adminOpen').onclick=()=>{openModal('#adminModal');$('#adminLogin').classList.remove('hidden');$('#adminPanel').classList.add('hidden');$('#loginForm').reset()};
 $('[data-close-admin]').onclick=()=>closeModal('#adminModal');
-$('#loginForm').onsubmit=e=>{e.preventDefault();if($('#adminEmail').value==='admin@barbearia.com'&&$('#adminPass').value==='123456'){$('#adminLogin').classList.add('hidden');$('#adminPanel').classList.remove('hidden');renderAdmin()}else alert('E-mail ou senha incorretos.')};
-$('#logout').onclick=()=>{$('#adminPanel').classList.add('hidden');$('#adminLogin').classList.remove('hidden');$('#loginForm').reset()};
+$('#loginForm').onsubmit=async e=>{
+ e.preventDefault();
+ const pin=$('#adminPin').value.trim();
+ try{
+   adminPin=pin;
+   const data=await api({action:'admin-list',pin});
+   $('#adminLogin').classList.add('hidden');$('#adminPanel').classList.remove('hidden');
+   const items=data.appointments||[];
+   await loadAdmin();
+ }catch(err){adminPin='';alert(err.message)}
+};
+$('#logout').onclick=()=>{adminPin='';$('#adminPanel').classList.add('hidden');$('#adminLogin').classList.remove('hidden');$('#loginForm').reset()};
 $$('.modal').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('show')}));
 $('#year').textContent=new Date().getFullYear();render();
