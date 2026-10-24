@@ -113,10 +113,21 @@
     <div id="adminPanel" class="hidden">
       <div class="admin-head"><div><p class="kicker dark">AGENDA DO LIEDSON</p><h2>Horários marcados</h2></div><div class="admin-head-actions"><button class="btn btn-danger" id="clearAgenda">Limpar agenda</button><button class="btn btn-light" id="logout">Sair</button></div></div>
       <div class="admin-summary">
-        <div><span>Agendados</span><strong id="scheduledCount">0</strong></div>
-        <div><span>Concluídos</span><strong id="completedCount">0</strong></div>
-        <div><span>Cancelados</span><strong id="cancelledCount">0</strong></div>
-        <div><span>Total a receber</span><strong id="scheduledTotal">R$ 0,00</strong></div>
+        <div class="summary-card summary-pending">
+          <span>Agendados (<b id="scheduledCount">0</b>)</span>
+          <strong id="scheduledTotal">R$ 0,00</strong>
+          <small>Valor a receber</small>
+        </div>
+        <div class="summary-card summary-done">
+          <span>Concluídos (<b id="completedCount">0</b>)</span>
+          <strong id="completedTotal">R$ 0,00</strong>
+          <small>Valor recebido</small>
+        </div>
+        <div class="summary-card summary-cancelled">
+          <span>Cancelados (<b id="cancelledCount">0</b>)</span>
+          <strong id="cancelledTotal">R$ 0,00</strong>
+          <small>Valor não recebido</small>
+        </div>
       </div>
       <div id="appointmentList" class="appointments"></div>
     </div>
