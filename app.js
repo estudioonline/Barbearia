@@ -66,15 +66,15 @@ async function slots(){
      const left=Math.max(0,2-used);
      return `<button type="button" class="slot ${full?'busy':''}" data-time="${t}" ${full?'disabled':''}><strong>${t}</strong><small>${full?'Lotado':left+' vaga'+(left===1?'':'s')}</small></button>`;
    }).join('');
-   const availableButtons=$('.slot:not(.busy)');
-   if(!availableButtons.length){
+   const availableCount=all.filter(t=>(counts[t]||0)<2).length;
+   if(availableCount===0){
      $('#slots').innerHTML='<span class="muted">As 4 vagas deste dia já foram preenchidas. Escolha outra data.</span>';
      return;
    }
    $('#slots').onclick=e=>{
-     const b=e.target.closest('.slot:not(.busy)');
-     if(!b||!$('#slots').contains(b)) return;
-     $('.slot').forEach(x=>x.classList.remove('selected'));
+     const b=e.target.closest('.slot');
+     if(!b||b.classList.contains('busy')||!$('#slots').contains(b)) return;
+     $$('.slot').forEach(x=>x.classList.remove('selected'));
      b.classList.add('selected');
      $('#timeInput').value=b.dataset.time;
    };
