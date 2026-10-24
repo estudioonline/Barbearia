@@ -1,6 +1,6 @@
 const services=[
-{id:'nevou',name:'NEVOU',desc:'Serviço NEVOU.',price:100,duration:60},
-{id:'luzes',name:'LUZES',desc:'Serviço LUZES.',price:80,duration:60}
+{id:'nevou',name:'NEVOU',desc:'Atendimento de longa duração.',price:100,duration:300},
+{id:'luzes',name:'LUZES',desc:'Atendimento de longa duração.',price:80,duration:300}
 ];
 const barbers=[{id:'liedson',name:'Liedson',specialty:'Proprietário e barbeiro • cortes, barba e acabamento'}];
 const API='https://hncpyfvyffawdveidikl.supabase.co/functions/v1/barbearia-booking';
@@ -54,12 +54,16 @@ async function slots(){
  try{
    const availability=await getBusy(date);
    if(availability.full){$('#slots').innerHTML='<span class="muted">Este dia já atingiu o limite de 4 atendimentos. Escolha outra data.</span>';return}
-   const busy=availability.busy||[];
-   const opening=9*60,closing=19*60,interval=60,all=[];
-   for(let start=opening;start+service.duration<=closing;start+=interval) all.push(fromMinutes(start));
-   $('#slots').innerHTML=all.map(t=>`<button type="button" class="slot ${overlaps(t,service.duration,busy)?'busy':''}" data-time="${t}">${t}</button>`).join('');
-   $$('.slot:not(.busy)').forEach(b=>b.onclick=()=>{$$('.slot').forEach(x=>x.classList.remove('selected'));b.classList.add('selected');$('#timeInput').value=b.dataset.time});
-   if(!$$('.slot:not(.busy)').length) $('#slots').innerHTML='<span class="muted">Não há horários disponíveis para este dia.</span>';
+   const counts=availability.slotCounts||{"08:00":0,"13:00":0};
+   const all=["08:00","13:00"];
+   $('#slots').innerHTML=all.map(t=>{
+     const used=counts[t]||0;
+     const full=used>=2;
+     const left=Math.max(0,2-used);
+     return `<button type="button" class="slot ${full?'busy':''}" data-time="${t}" ${full?'disabled':''}><strong>${t}</strong><small>${full?'Lotado':left+' vaga'+(left===1?'':'s')}</small></button>`;
+   }).join('');
+   $('.slot:not(.busy)').forEach(b=>b.onclick=()=>{$('.slot').forEach(x=>x.classList.remove('selected'));b.classList.add('selected');$('#timeInput').value=b.dataset.time});
+   if(!$('.slot:not(.busy)').length) $('#slots').innerHTML='<span class="muted">As 4 vagas deste dia já foram preenchidas. Escolha outra data.</span>';
  }catch{$('#slots').innerHTML='<span class="muted">Não foi possível carregar os horários. Tente novamente.</span>'}
 }
 function summary(){
