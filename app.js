@@ -97,6 +97,13 @@ async function loadAdmin(){
  try{
    const data=await api({action:'admin-list',pin:adminPin});
    const items=data.appointments||[];
+   const scheduled=items.filter(a=>a.status==='agendado');
+   const total=scheduled.reduce((sum,a)=>{
+     const s=services.find(x=>x.id===a.service_id);
+     return sum+(s?.price||0);
+   },0);
+   $('#scheduledCount').textContent=String(scheduled.length);
+   $('#scheduledTotal').textContent=money(total);
    $('#appointmentList').innerHTML=items.length?items.map(a=>{
      const s=services.find(x=>x.id===a.service_id);
      const time=fromMinutes(a.start_minute);
