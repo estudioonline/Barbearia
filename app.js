@@ -49,7 +49,11 @@ async function slots(){
  const service=services.find(s=>s.id===$('#serviceSelect').value);
  $('#timeInput').value='';
  if(!date||!service){$('#slots').innerHTML='<span class="muted">Escolha o serviço e a data.</span>';return}
- if(new Date(date+'T12:00:00').getDay()===0){$('#slots').innerHTML='<span class="muted">Fechado aos domingos.</span>';return}
+ const d=new Date(date+'T12:00:00');
+ const month=d.getMonth()+1, day=d.getDate(), dow=d.getDay();
+ if(month!==12){$('#slots').innerHTML='<span class="muted">NEVOU e LUZES estão disponíveis somente em dezembro.</span>';return}
+ if(dow===0||dow===1){$('#slots').innerHTML='<span class="muted">Não há atendimento aos domingos e segundas-feiras.</span>';return}
+ if(day===25){$('#slots').innerHTML='<span class="muted">Não há atendimento no dia 25 de dezembro.</span>';return}
  $('#slots').innerHTML='<span class="muted">Consultando agenda...</span>';
  try{
    const availability=await getBusy(date);
@@ -125,7 +129,10 @@ $$('[data-next]').forEach(b=>b.onclick=()=>{if(valid())setStep(Math.min(3,step+1
 $$('[data-back]').forEach(b=>b.onclick=()=>setStep(Math.max(1,step-1)));
 $('#dateInput').onchange=slots;
 $('#serviceSelect').onchange=()=>{if($('#dateInput').value)slots()};
-const now=new Date(),min=[now.getFullYear(),String(now.getMonth()+1).padStart(2,'0'),String(now.getDate()).padStart(2,'0')].join('-');$('#dateInput').min=min;
+const now=new Date();
+const targetYear=now.getMonth()===11?now.getFullYear():now.getFullYear();
+$('#dateInput').min=`${targetYear}-12-01`;
+$('#dateInput').max=`${targetYear}-12-31`;
 $('#bookingForm').onsubmit=async e=>{
  e.preventDefault();
  const s=services.find(x=>x.id===$('#serviceSelect').value);
