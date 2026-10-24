@@ -4,18 +4,17 @@ const services=[
 {id:'combo',name:'Corte + Barba',desc:'Experiência completa para renovar o visual.',price:70,duration:90},
 {id:'acabamento',name:'Acabamento',desc:'Pezinho, contorno e pequenos ajustes.',price:20,duration:30}
 ];
-const barbers=[
-{id:'liedson',name:'Liedson',specialty:'Proprietário e barbeiro • cortes, barba e acabamento'}
-];
+const barbers=[{id:'liedson',name:'Liedson',specialty:'Proprietário e barbeiro • cortes, barba e acabamento'}];
+const API='https://hncpyfvyffawdveidikl.supabase.co/functions/v1/barbearia-booking';
+const API_KEY='sb_publishable_vuoGNU0lSuM9Trm7RqCoQQ_LyedLwMb';
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 const money=n=>n.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
-const key='barbearia_liedson_appointments_v2';
-const getAppointments=()=>{try{return JSON.parse(localStorage.getItem(key)||'[]')}catch{return[]}};
-const saveAppointments=v=>localStorage.setItem(key,JSON.stringify(v));
+const localKey='barbearia_liedson_confirmados_v3';
+const getLocal=()=>{try{return JSON.parse(localStorage.getItem(localKey)||'[]')}catch{return[]}};
+const saveLocal=v=>localStorage.setItem(localKey,JSON.stringify(v));
 const fmtDate=v=>new Date(v+'T12:00:00').toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'2-digit'});
 const toMinutes=t=>{const [h,m]=t.split(':').map(Number);return h*60+m};
 const fromMinutes=m=>String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0');
-const endMinutes=(time,duration)=>toMinutes(time)+duration;
 
 function render(){
  $('#serviceGrid').innerHTML=services.map((s,i)=>`<article class="service-card"><div class="service-number">0${i+1}</div><h3>${s.name}</h3><p>${s.desc}</p><div class="service-bottom"><strong>${money(s.price)}</strong><span>${s.duration} min</span></div></article>`).join('');
@@ -29,27 +28,31 @@ function closeModal(id){$(id).classList.remove('show');$(id).setAttribute('aria-
 let step=1;
 function setStep(n){step=n;$$('.form-step').forEach(x=>x.classList.toggle('active',+x.dataset.step===n));$$('[data-dot]').forEach(x=>x.classList.toggle('active',+x.dataset.dot<=n));if(n===3)summary()}
 function resetBooking(){$('#bookingForm').reset();$('#barberSelect').value='liedson';$('#slots').innerHTML='';$('#timeInput').value='';setStep(1)}
-
-function hasConflict(date,start,duration){
- const candidateStart=toMinutes(start),candidateEnd=candidateStart+duration;
- return getAppointments().filter(a=>a.date===date&&a.barber==='liedson').some(a=>{
-   const bookedService=services.find(s=>s.id===a.service);
-   const bookedDuration=a.duration||bookedService?.duration||50;
-   const bookedStart=toMinutes(a.time),bookedEnd=bookedStart+bookedDuration;
-   return candidateStart<bookedEnd&&candidateEnd>bookedStart;
- });
+async function getBusy(date){
+ const res=await fetch(API+'?date='+encodeURIComponent(date),{headers:{apikey:API_KEY}});
+ if(!res.ok) throw new Error('Não foi possível consultar a agenda.');
+ const data=await res.json();
+ return data.busy||[];
 }
-function slots(){
+function overlaps(start,duration,busy){
+ const a=toMinutes(start),b=a+duration;
+ return busy.some(x=>a<(x.start_minute+x.duration_minutes)&&b>x.start_minute);
+}
+async function slots(){
  const date=$('#dateInput').value;
  const service=services.find(s=>s.id===$('#serviceSelect').value);
  $('#timeInput').value='';
  if(!date||!service){$('#slots').innerHTML='<span class="muted">Escolha o serviço e a data.</span>';return}
  if(new Date(date+'T12:00:00').getDay()===0){$('#slots').innerHTML='<span class="muted">Fechado aos domingos.</span>';return}
- const opening=9*60,closing=19*60,interval=50,all=[];
- for(let start=opening;start+service.duration<=closing;start+=interval) all.push(fromMinutes(start));
- $('#slots').innerHTML=all.map(t=>`<button type="button" class="slot ${hasConflict(date,t,service.duration)?'busy':''}" data-time="${t}">${t}</button>`).join('');
- $$('.slot:not(.busy)').forEach(b=>b.onclick=()=>{$$('.slot').forEach(x=>x.classList.remove('selected'));b.classList.add('selected');$('#timeInput').value=b.dataset.time});
- if(!$$('.slot:not(.busy)').length) $('#slots').innerHTML='<span class="muted">Não há horários disponíveis para este dia.</span>';
+ $('#slots').innerHTML='<span class="muted">Consultando agenda...</span>';
+ try{
+   const busy=await getBusy(date);
+   const opening=9*60,closing=19*60,interval=50,all=[];
+   for(let start=opening;start+service.duration<=closing;start+=interval) all.push(fromMinutes(start));
+   $('#slots').innerHTML=all.map(t=>`<button type="button" class="slot ${overlaps(t,service.duration,busy)?'busy':''}" data-time="${t}">${t}</button>`).join('');
+   $$('.slot:not(.busy)').forEach(b=>b.onclick=()=>{$$('.slot').forEach(x=>x.classList.remove('selected'));b.classList.add('selected');$('#timeInput').value=b.dataset.time});
+   if(!$$('.slot:not(.busy)').length) $('#slots').innerHTML='<span class="muted">Não há horários disponíveis para este dia.</span>';
+ }catch(err){$('#slots').innerHTML='<span class="muted">Não foi possível carregar os horários. Tente novamente.</span>'}
 }
 function summary(){
  const s=services.find(x=>x.id===$('#serviceSelect').value);
@@ -61,12 +64,11 @@ function valid(){
  return true
 }
 function renderAdmin(){
- const items=getAppointments().sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time));
+ const items=getLocal().sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time));
  $('#appointmentList').innerHTML=items.length?items.map(a=>{
    const s=services.find(x=>x.id===a.service);
-   return`<div class="appointment"><div><strong>${fmtDate(a.date)} • ${a.time} — ${a.name}</strong><small>${s?.name||a.service} com Liedson • ${a.duration||s?.duration||50} min<br>${a.phone}</small></div><button data-del="${a.id}">Cancelar</button></div>`
- }).join(''):'<div class="empty">Nenhum agendamento cadastrado.</div>';
- $$('[data-del]').forEach(btn=>btn.onclick=()=>{if(confirm('Cancelar este agendamento?')){saveAppointments(getAppointments().filter(a=>a.id!==btn.dataset.del));renderAdmin()}});
+   return`<div class="appointment"><div><strong>${fmtDate(a.date)} • ${a.time} — ${a.name}</strong><small>${s?.name||a.service} com Liedson • ${a.duration||s?.duration||50} min<br>${a.phone}</small></div></div>`
+ }).join(''):'<div class="empty">Nenhum agendamento confirmado neste navegador.</div>';
 }
 $$('[data-book]').forEach(b=>b.onclick=()=>{resetBooking();openModal('#bookingModal')});
 $('[data-close-book]').onclick=()=>closeModal('#bookingModal');
@@ -75,14 +77,23 @@ $$('[data-back]').forEach(b=>b.onclick=()=>setStep(Math.max(1,step-1)));
 $('#dateInput').onchange=slots;
 $('#serviceSelect').onchange=()=>{if($('#dateInput').value)slots()};
 const now=new Date(),min=[now.getFullYear(),String(now.getMonth()+1).padStart(2,'0'),String(now.getDate()).padStart(2,'0')].join('-');$('#dateInput').min=min;
-$('#bookingForm').onsubmit=e=>{
+$('#bookingForm').onsubmit=async e=>{
  e.preventDefault();
  const s=services.find(x=>x.id===$('#serviceSelect').value);
- const a={id:String(Date.now()),service:s.id,barber:'liedson',date:$('#dateInput').value,time:$('#timeInput').value,duration:s.duration,name:$('#nameInput').value.trim(),phone:$('#phoneInput').value.trim()};
- if(hasConflict(a.date,a.time,a.duration)){alert('Este horário já foi ocupado. Escolha outro.');setStep(2);slots();return}
- const items=getAppointments();items.push(a);saveAppointments(items);
- $('#successText').textContent=`${a.name}, seu ${s.name} com Liedson está marcado para ${fmtDate(a.date)} às ${a.time}. O horário foi bloqueado na agenda.`;
- closeModal('#bookingModal');openModal('#successModal')
+ const a={service:s.id,date:$('#dateInput').value,time:$('#timeInput').value,name:$('#nameInput').value.trim(),phone:$('#phoneInput').value.trim()};
+ const submit=e.submitter; if(submit){submit.disabled=true;submit.textContent='Confirmando...'}
+ try{
+   const res=await fetch(API,{method:'POST',headers:{'Content-Type':'application/json',apikey:API_KEY},body:JSON.stringify(a)});
+   const data=await res.json();
+   if(!res.ok) throw new Error(data.error||'Não foi possível concluir o agendamento.');
+   const confirmed={...a,id:data.appointment?.id||String(Date.now()),barber:'liedson',duration:s.duration};
+   const local=getLocal();local.push(confirmed);saveLocal(local);
+   $('#successText').textContent=`${a.name}, seu ${s.name} com Liedson está marcado para ${fmtDate(a.date)} às ${a.time}. Esse horário já foi bloqueado para todos os clientes.`;
+   closeModal('#bookingModal');openModal('#successModal');
+ }catch(err){
+   alert(err.message||'Não foi possível concluir o agendamento.');
+   setStep(2);await slots();
+ }finally{if(submit){submit.disabled=false;submit.textContent='Confirmar'}}
 };
 $('[data-close-success]').onclick=()=>closeModal('#successModal');
 $('#adminOpen').onclick=()=>{openModal('#adminModal');$('#adminLogin').classList.remove('hidden');$('#adminPanel').classList.add('hidden')};
