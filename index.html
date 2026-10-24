@@ -17,71 +17,38 @@
     <span class="brand-badge">L</span>
     <span><strong>LIEDSON</strong><small>BARBEARIA</small></span>
   </a>
-  <nav>
-    <a href="#servicos">Serviços</a>
-    <a href="#profissionais">Profissional</a>
-    <a href="#contato">Contato</a>
-    <button class="btn btn-outline" id="adminOpen">Área do barbeiro</button>
+  <nav class="simple-nav">
+    <button class="btn btn-white" data-book>Agendamento</button>
+    <button class="btn btn-outline" id="adminOpen">Barbeiro</button>
   </nav>
 </header>
 
 <main>
-  <section class="hero" id="inicio">
+  <section class="hero simple-hero" id="inicio">
     <div class="hero-overlay"></div>
     <div class="hero-inner">
-      <p class="kicker">BARBEARIA • ESTILO • PONTUALIDADE</p>
-      <h1>Seu estilo.<br>Seu horário.</h1>
-      <p class="hero-copy">Agende seu atendimento com Liedson em poucos passos. Escolha o serviço, o dia e um horário disponível.</p>
-      <div class="hero-actions">
-        <button class="btn btn-white btn-lg" data-book>Agendar agora</button>
-        <a class="btn btn-dark btn-lg" href="#servicos">Ver serviços</a>
+      <p class="kicker">BARBEARIA LIEDSON</p>
+      <h1>Agende seu<br>horário.</h1>
+      <p class="hero-copy">Escolha o serviço, a data e o horário disponível. Atendimento com Liedson.</p>
+
+      <div class="main-choice-grid">
+        <button class="choice-card" data-book>
+          <span class="choice-icon">01</span>
+          <strong>Agendamento</strong>
+          <small>Marcar um novo horário</small>
+        </button>
+
+        <button class="choice-card" id="adminOpenMain">
+          <span class="choice-icon">02</span>
+          <strong>Barbeiro</strong>
+          <small>Acessar agenda do Liedson</small>
+        </button>
       </div>
-      <div class="hero-info">
-        <div><b>Liedson</b><span>Proprietário e barbeiro</span></div>
+
+      <div class="hero-info simple-info">
+        <div><b>Liedson</b><span>Único barbeiro</span></div>
         <div><b>Seg–Sáb</b><span>09h às 19h</span></div>
-        <div><b>Online</b><span>Agenda com bloqueio de horários</span></div>
       </div>
-    </div>
-  </section>
-
-  <section class="section intro">
-    <p class="kicker dark">ATENDIMENTO PROFISSIONAL</p>
-    <h2>Sem fila. Sem complicação.</h2>
-    <p>Atendimento individual com Liedson, com horários organizados para manter conforto, qualidade e pontualidade.</p>
-  </section>
-
-  <section class="section gray" id="servicos">
-    <div class="section-title">
-      <div><p class="kicker dark">SERVIÇOS</p><h2>Escolha seu atendimento</h2></div>
-      <p>Os cortes são planejados com cerca de 40 a 50 minutos por cliente, evitando sobreposição de horários.</p>
-    </div>
-    <div class="service-grid" id="serviceGrid"></div>
-  </section>
-
-  <section class="section" id="profissionais">
-    <div class="section-title">
-      <div><p class="kicker dark">PROFISSIONAL</p><h2>Liedson</h2></div>
-      <p>Proprietário da barbearia e único profissional responsável pelos atendimentos e pela agenda.</p>
-    </div>
-    <div class="barber-grid" id="barberGrid"></div>
-  </section>
-
-  <section class="booking-banner">
-    <div><p class="kicker">AGENDE EM MINUTOS</p><h2>Pronto para renovar o visual?</h2><p>Ao confirmar um horário, ele deixa de ficar disponível para outro agendamento.</p></div>
-    <button class="btn btn-white btn-lg" data-book>Escolher horário</button>
-  </section>
-
-  <section class="section gray contact" id="contato">
-    <div>
-      <p class="kicker dark">CONTATO</p>
-      <h2>Informações da barbearia</h2>
-      <p class="muted">Os dados abaixo podem ser substituídos pelos dados reais da barbearia.</p>
-    </div>
-    <div class="contact-card">
-      <div><span>Profissional</span><strong>Liedson</strong></div>
-      <div><span>Horário</span><strong>Segunda a sábado • 09h às 19h</strong></div>
-      <div><span>WhatsApp oficial</span><strong>(61) 99259-1846</strong></div>
-      <div><span>Endereço</span><strong>Adicionar endereço da barbearia</strong></div>
     </div>
   </section>
 </main>
