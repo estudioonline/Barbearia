@@ -98,11 +98,15 @@ async function loadAdmin(){
    const data=await api({action:'admin-list',pin:adminPin});
    const items=data.appointments||[];
    const scheduled=items.filter(a=>a.status==='agendado');
+   const completed=items.filter(a=>a.status==='concluido');
+   const cancelled=items.filter(a=>a.status==='cancelado');
    const total=scheduled.reduce((sum,a)=>{
      const s=services.find(x=>x.id===a.service_id);
      return sum+(s?.price||0);
    },0);
    $('#scheduledCount').textContent=String(scheduled.length);
+   $('#completedCount').textContent=String(completed.length);
+   $('#cancelledCount').textContent=String(cancelled.length);
    $('#scheduledTotal').textContent=money(total);
    $('#appointmentList').innerHTML=items.length?items.map(a=>{
      const s=services.find(x=>x.id===a.service_id);
