@@ -26,6 +26,7 @@ let adminPin='';
 function render(){
  $('#serviceSelect').innerHTML='<option value="">Selecione...</option>'+services.map(s=>`<option value="${s.id}">${s.name} — ${money(s.price)} • ${s.duration} min</option>`).join('');
  $('#barberSelect').innerHTML='<option value="liedson" selected>Liedson</option>';
+ $('#barberSelect').value='liedson';
  $('#barberSelect').disabled=true;
 }
 function openModal(id){$(id).classList.add('show');$(id).setAttribute('aria-hidden','false')}
