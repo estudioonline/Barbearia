@@ -63,8 +63,10 @@ footer{background:#080808;color:#888;padding:26px max(22px,7vw);display:flex;jus
 .btn-danger:hover{background:#741717}
 @media(max-width:560px){.admin-head{flex-direction:column}.admin-head-actions{width:100%}.admin-head-actions .btn{flex:1}}
 
-.admin-summary{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:18px 0}
+.admin-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:18px 0}
 .admin-summary>div{border:1px solid #d2d2d2;background:#f7f7f7;padding:14px 16px;border-radius:6px}
 .admin-summary span{display:block;font-size:11px;color:#777;text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px}
 .admin-summary strong{font-size:22px}
 @media(max-width:560px){.admin-summary{grid-template-columns:1fr 1fr}.admin-summary strong{font-size:18px}}
+
+@media(max-width:760px){.admin-summary{grid-template-columns:repeat(2,minmax(0,1fr))}}
