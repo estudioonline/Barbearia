@@ -32,7 +32,7 @@ function openModal(id){$(id).classList.add('show');$(id).setAttribute('aria-hidd
 function closeModal(id){$(id).classList.remove('show');$(id).setAttribute('aria-hidden','true')}
 let step=1;
 function setStep(n){step=n;$$('.form-step').forEach(x=>x.classList.toggle('active',+x.dataset.step===n));$$('[data-dot]').forEach(x=>x.classList.toggle('active',+x.dataset.dot<=n));if(n===3)summary()}
-function resetBooking(){$('#bookingForm').reset();$('#barberSelect').value='liedson';$('#slots').innerHTML='';$('#timeInput').value='';setStep(1)}
+function resetBooking(){render();$('#bookingForm').reset();$('#barberSelect').value='liedson';$('#slots').innerHTML='';$('#timeInput').value='';setStep(1)}
 async function api(body){
  const res=await fetch(API,{method:'POST',headers:{'Content-Type':'application/json',apikey:API_KEY},body:JSON.stringify(body)});
  const data=await res.json();
