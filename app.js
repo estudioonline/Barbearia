@@ -25,15 +25,12 @@ let adminPin='';
 
 function render(){
  $('#serviceSelect').innerHTML='<option value="">Selecione...</option>'+services.map(s=>`<option value="${s.id}">${s.name} — ${money(s.price)} • ${s.duration} min</option>`).join('');
- $('#barberSelect').innerHTML='<option value="liedson" selected>Liedson</option>';
- $('#barberSelect').value='liedson';
- $('#barberSelect').disabled=true;
 }
 function openModal(id){$(id).classList.add('show');$(id).setAttribute('aria-hidden','false')}
 function closeModal(id){$(id).classList.remove('show');$(id).setAttribute('aria-hidden','true')}
 let step=1;
 function setStep(n){step=n;$$('.form-step').forEach(x=>x.classList.toggle('active',+x.dataset.step===n));$$('[data-dot]').forEach(x=>x.classList.toggle('active',+x.dataset.dot<=n));if(n===3)summary()}
-function resetBooking(){render();$('#bookingForm').reset();$('#barberSelect').value='liedson';$('#slots').innerHTML='';$('#timeInput').value='';setStep(1)}
+function resetBooking(){render();$('#bookingForm').reset();$('#slots').innerHTML='';$('#timeInput').value='';setStep(1)}
 async function api(body){
  const res=await fetch(API,{method:'POST',headers:{'Content-Type':'application/json',apikey:API_KEY},body:JSON.stringify(body)});
  const data=await res.json();
