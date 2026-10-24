@@ -7,6 +7,7 @@ const services=[
 const barbers=[{id:'liedson',name:'Liedson',specialty:'Proprietário e barbeiro • cortes, barba e acabamento'}];
 const API='https://hncpyfvyffawdveidikl.supabase.co/functions/v1/barbearia-booking';
 const API_KEY='sb_publishable_vuoGNU0lSuM9Trm7RqCoQQ_LyedLwMb';
+const LIEDSON_WHATSAPP=''; // preencher com DDI+DDD+número, ex.: 5561999999999
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 const money=n=>n.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
 const localKey='barbearia_liedson_confirmados_v3';
@@ -88,7 +89,15 @@ $('#bookingForm').onsubmit=async e=>{
    if(!res.ok) throw new Error(data.error||'Não foi possível concluir o agendamento.');
    const confirmed={...a,id:data.appointment?.id||String(Date.now()),barber:'liedson',duration:s.duration};
    const local=getLocal();local.push(confirmed);saveLocal(local);
-   $('#successText').textContent=`${a.name}, seu ${s.name} com Liedson está marcado para ${fmtDate(a.date)} às ${a.time}. Esse horário já foi bloqueado para todos os clientes.`;
+   const confirmText=`Olá, Liedson! Sou ${a.name}. Acabei de agendar ${s.name} para ${fmtDate(a.date)} às ${a.time}. Meu WhatsApp é ${a.phone}.`;
+   const wa=$('#whatsappConfirm');
+   if(wa && LIEDSON_WHATSAPP){
+     wa.href='https://wa.me/'+LIEDSON_WHATSAPP+'?text='+encodeURIComponent(confirmText);
+     wa.style.display='inline-flex';
+   } else if(wa) {
+     wa.style.display='none';
+   }
+   $('#successText').textContent=`${a.name}, seu ${s.name} na Barbearia Liedson está marcado para ${fmtDate(a.date)} às ${a.time}. Esse horário já foi bloqueado para todos os clientes.`;
    closeModal('#bookingModal');openModal('#successModal');
  }catch(err){
    alert(err.message||'Não foi possível concluir o agendamento.');
