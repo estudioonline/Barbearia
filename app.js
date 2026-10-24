@@ -62,8 +62,8 @@ async function slots(){
      const left=Math.max(0,2-used);
      return `<button type="button" class="slot ${full?'busy':''}" data-time="${t}" ${full?'disabled':''}><strong>${t}</strong><small>${full?'Lotado':left+' vaga'+(left===1?'':'s')}</small></button>`;
    }).join('');
-   $('.slot:not(.busy)').forEach(b=>b.onclick=()=>{$('.slot').forEach(x=>x.classList.remove('selected'));b.classList.add('selected');$('#timeInput').value=b.dataset.time});
-   if(!$('.slot:not(.busy)').length) $('#slots').innerHTML='<span class="muted">As 4 vagas deste dia já foram preenchidas. Escolha outra data.</span>';
+   $$('.slot:not(.busy)').forEach(b=>b.onclick=()=>{$('.slot').forEach(x=>x.classList.remove('selected'));b.classList.add('selected');$('#timeInput').value=b.dataset.time});
+   if(!$$('.slot:not(.busy)').length) $('#slots').innerHTML='<span class="muted">As 4 vagas deste dia já foram preenchidas. Escolha outra data.</span>';
  }catch{$('#slots').innerHTML='<span class="muted">Não foi possível carregar os horários. Tente novamente.</span>'}
 }
 function summary(){
