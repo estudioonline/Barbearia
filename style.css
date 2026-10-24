@@ -28,12 +28,12 @@ footer{background:#080808;color:#888;padding:26px max(22px,7vw);display:flex;jus
 .appt-top{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.status{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;padding:5px 8px;border-radius:999px}.status.pending{background:#e6e6e6;color:#222}.status.done{background:#111;color:#fff}.appointment.completed{opacity:.65}.complete-btn{background:#111!important;color:#fff!important;border-color:#111!important}.appointment button:disabled{opacity:.55;cursor:not-allowed}
 
 .simple-nav{display:flex;align-items:center;gap:10px}.simple-nav .btn{min-width:112px}
-.simple-hero .hero-inner{max-width:820px}.main-choice-grid{display:grid;grid-template-columns:repeat(2,minmax(220px,1fr));gap:14px;width:min(620px,100%);margin-top:34px}
+.simple-hero .hero-inner{max-width:820px}.main-choice-grid{display:grid;grid-template-columns:1fr;gap:14px;width:min(420px,100%);margin-top:34px}
 .choice-card{appearance:none;text-align:left;border:1px solid rgba(255,255,255,.3);background:rgba(10,10,10,.72);color:#fff;padding:24px;border-radius:8px;display:flex;flex-direction:column;gap:8px;backdrop-filter:blur(6px);transition:.2s}
 .choice-card:hover{transform:translateY(-2px);background:rgba(255,255,255,.96);color:#111;border-color:#fff}
-.choice-icon{font:700 34px Oswald;color:#8e8e8e}.choice-card strong{font:700 24px Oswald;text-transform:uppercase}.choice-card small{font-size:12px;color:#bdbdbd}.choice-card:hover small{color:#555}
+.choice-card strong{font:700 24px Oswald;text-transform:uppercase}.choice-card small{font-size:12px;color:#bdbdbd}.choice-card:hover small{color:#555}
 .simple-info{gap:55px}
-@media(max-width:560px){.simple-nav{gap:6px}.simple-nav .btn{min-width:auto;padding:9px 11px;font-size:11px}.main-choice-grid{grid-template-columns:1fr}.simple-info{gap:28px}}
+@media(max-width:560px){.simple-nav{gap:6px}.simple-nav .btn{min-width:auto;padding:9px 11px;font-size:11px}.main-choice-grid{grid-template-columns:1fr;width:100%}.simple-info{gap:28px}}
 
 .hero-info-block{display:flex;flex-direction:column;gap:8px;min-width:260px}
 .booking-preview{margin-top:10px;padding:14px 16px;border:1px solid rgba(255,255,255,.18);background:rgba(0,0,0,.35);border-radius:8px;max-width:320px}
