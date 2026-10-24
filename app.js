@@ -15,8 +15,6 @@ const fromMinutes=m=>String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).p
 let adminPin='';
 
 function render(){
- $('#serviceGrid').innerHTML=services.map((s,i)=>`<article class="service-card"><div class="service-number">0${i+1}</div><h3>${s.name}</h3><p>${s.desc}</p><div class="service-bottom"><strong>${money(s.price)}</strong><span>${s.duration} min</span></div></article>`).join('');
- $('#barberGrid').innerHTML=barbers.map(b=>`<article class="barber-card"><div class="avatar">${b.name[0]}</div><h3>${b.name}</h3><p>${b.specialty}</p><span class="role">Único profissional • agenda online</span></article>`).join('');
  $('#serviceSelect').innerHTML='<option value="">Selecione...</option>'+services.map(s=>`<option value="${s.id}">${s.name} — ${money(s.price)} • ${s.duration} min</option>`).join('');
  $('#barberSelect').innerHTML='<option value="liedson" selected>Liedson</option>';
  $('#barberSelect').disabled=true;
@@ -113,7 +111,9 @@ $('#bookingForm').onsubmit=async e=>{
  finally{if(submit){submit.disabled=false;submit.textContent='Confirmar'}}
 };
 $('[data-close-success]').onclick=()=>closeModal('#successModal');
-$('#adminOpen').onclick=()=>{openModal('#adminModal');$('#adminLogin').classList.remove('hidden');$('#adminPanel').classList.add('hidden');$('#loginForm').reset()};
+const openAdmin=()=>{openModal('#adminModal');$('#adminLogin').classList.remove('hidden');$('#adminPanel').classList.add('hidden');$('#loginForm').reset()};
+$('#adminOpen').onclick=openAdmin;
+$('#adminOpenMain').onclick=openAdmin;
 $('[data-close-admin]').onclick=()=>closeModal('#adminModal');
 $('#loginForm').onsubmit=async e=>{
  e.preventDefault();
