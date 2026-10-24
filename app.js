@@ -94,13 +94,13 @@ async function loadAdmin(){
        ${done||cancelled?'':`<div class="admin-actions"><button class="complete-btn" data-complete="${a.id}">Concluir</button><button class="cancel-btn" data-cancel="${a.id}" data-phone="${a.phone}" data-name="${a.customer_name}" data-date="${a.appointment_date}" data-time="${time}" data-service="${s?.name||a.service_id}">Cancelar</button></div>`}
      </div>`;
    }).join(''):'<div class="empty">Nenhum agendamento encontrado.</div>';
-   $('[data-complete]').forEach(btn=>btn.onclick=async()=>{
+   $$('[data-complete]').forEach(btn=>btn.onclick=async()=>{
      if(!confirm('Marcar este atendimento como concluído?')) return;
      btn.disabled=true;btn.textContent='Salvando...';
      try{await api({action:'complete',pin:adminPin,id:btn.dataset.complete});await loadAdmin()}
      catch(err){alert(err.message);btn.disabled=false;btn.textContent='Concluir'}
    });
-   $('[data-cancel]').forEach(btn=>btn.onclick=async()=>{
+   $$('[data-cancel]').forEach(btn=>btn.onclick=async()=>{
      if(!confirm('Cancelar este agendamento? O horário ficará disponível novamente.')) return;
      btn.disabled=true;btn.textContent='Cancelando...';
      try{
