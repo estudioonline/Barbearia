@@ -141,7 +141,6 @@ $('#bookingForm').onsubmit=async e=>{
 $('[data-close-success]').onclick=()=>closeModal('#successModal');
 const openAdmin=()=>{openModal('#adminModal');$('#adminLogin').classList.remove('hidden');$('#adminPanel').classList.add('hidden');$('#loginForm').reset()};
 $('#adminOpen').onclick=openAdmin;
-$('#adminOpenMain').onclick=openAdmin;
 $('[data-close-admin]').onclick=()=>closeModal('#adminModal');
 $('#loginForm').onsubmit=async e=>{
  e.preventDefault();
