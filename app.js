@@ -7,7 +7,7 @@ const services=[
 const barbers=[{id:'liedson',name:'Liedson',specialty:'Proprietário e barbeiro • cortes, barba e acabamento'}];
 const API='https://hncpyfvyffawdveidikl.supabase.co/functions/v1/barbearia-booking';
 const API_KEY='sb_publishable_vuoGNU0lSuM9Trm7RqCoQQ_LyedLwMb';
-const LIEDSON_WHATSAPP=''; // preencher com DDI+DDD+número, ex.: 5561999999999
+const LIEDSON_WHATSAPP='5561992591846';
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 const money=n=>n.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
 const localKey='barbearia_liedson_confirmados_v3';
