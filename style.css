@@ -57,3 +57,8 @@ footer{background:#080808;color:#888;padding:26px max(22px,7vw);display:flex;jus
 .admin-actions{display:flex;gap:8px;align-items:center}
 .cancel-btn{background:#fff!important;color:#9b1c1c!important;border-color:#d8a3a3!important}
 @media(max-width:560px){.appointment{grid-template-columns:1fr}.admin-actions{width:100%}.admin-actions button{flex:1}}
+
+.admin-head-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.btn-danger{background:#8f1d1d;color:#fff;border:1px solid #8f1d1d}
+.btn-danger:hover{background:#741717}
+@media(max-width:560px){.admin-head{flex-direction:column}.admin-head-actions{width:100%}.admin-head-actions .btn{flex:1}}
