@@ -1,11 +1,6 @@
 const services=[
-{id:'corte',name:'Corte Masculino',desc:'Corte personalizado com acabamento e finalização.',price:45,duration:50},
-{id:'barba',name:'Barba',desc:'Modelagem, acabamento e cuidado completo da barba.',price:35,duration:40},
-{id:'combo',name:'Corte + Barba',desc:'Experiência completa para renovar o visual.',price:70,duration:90},
-{id:'acabamento',name:'Acabamento',desc:'Pezinho, contorno e pequenos ajustes.',price:20,duration:30},
-{id:'degrade',name:'Corte Degradê (teste)',desc:'Serviço de teste para visualizar a agenda.',price:55,duration:60},
-{id:'sobrancelha',name:'Sobrancelha (teste)',desc:'Serviço rápido de teste.',price:15,duration:15},
-{id:'pezinho',name:'Pezinho (teste)',desc:'Acabamento simples para teste.',price:15,duration:20}
+{id:'nevou',name:'NEVOU',desc:'Serviço NEVOU.',price:100,duration:60},
+{id:'luzes',name:'LUZES',desc:'Serviço LUZES.',price:80,duration:60}
 ];
 const barbers=[{id:'liedson',name:'Liedson',specialty:'Proprietário e barbeiro • cortes, barba e acabamento'}];
 const API='https://hncpyfvyffawdveidikl.supabase.co/functions/v1/barbearia-booking';
@@ -43,7 +38,7 @@ async function api(body){
 async function getBusy(date){
  const res=await fetch(API+'?date='+encodeURIComponent(date),{headers:{apikey:API_KEY}});
  if(!res.ok) throw new Error('Não foi possível consultar a agenda.');
- const data=await res.json(); return data.busy||[];
+ const data=await res.json(); return data;
 }
 function overlaps(start,duration,busy){
  const a=toMinutes(start),b=a+duration;
@@ -57,8 +52,10 @@ async function slots(){
  if(new Date(date+'T12:00:00').getDay()===0){$('#slots').innerHTML='<span class="muted">Fechado aos domingos.</span>';return}
  $('#slots').innerHTML='<span class="muted">Consultando agenda...</span>';
  try{
-   const busy=await getBusy(date);
-   const opening=9*60,closing=19*60,interval=50,all=[];
+   const availability=await getBusy(date);
+   if(availability.full){$('#slots').innerHTML='<span class="muted">Este dia já atingiu o limite de 4 atendimentos. Escolha outra data.</span>';return}
+   const busy=availability.busy||[];
+   const opening=9*60,closing=19*60,interval=60,all=[];
    for(let start=opening;start+service.duration<=closing;start+=interval) all.push(fromMinutes(start));
    $('#slots').innerHTML=all.map(t=>`<button type="button" class="slot ${overlaps(t,service.duration,busy)?'busy':''}" data-time="${t}">${t}</button>`).join('');
    $$('.slot:not(.busy)').forEach(b=>b.onclick=()=>{$$('.slot').forEach(x=>x.classList.remove('selected'));b.classList.add('selected');$('#timeInput').value=b.dataset.time});
