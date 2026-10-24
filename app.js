@@ -90,15 +90,15 @@ $('#bookingForm').onsubmit=async e=>{
    const confirmed={...a,id:data.appointment?.id||String(Date.now()),barber:'liedson',duration:s.duration};
    const local=getLocal();local.push(confirmed);saveLocal(local);
    const confirmText=`Olá, Liedson! Sou ${a.name}. Acabei de agendar ${s.name} para ${fmtDate(a.date)} às ${a.time}. Meu WhatsApp é ${a.phone}.`;
+   const whatsappUrl='https://wa.me/'+LIEDSON_WHATSAPP+'?text='+encodeURIComponent(confirmText);
    const wa=$('#whatsappConfirm');
-   if(wa && LIEDSON_WHATSAPP){
-     wa.href='https://wa.me/'+LIEDSON_WHATSAPP+'?text='+encodeURIComponent(confirmText);
+   if(wa){
+     wa.href=whatsappUrl;
      wa.style.display='inline-flex';
-   } else if(wa) {
-     wa.style.display='none';
    }
-   $('#successText').textContent=`${a.name}, seu ${s.name} na Barbearia Liedson está marcado para ${fmtDate(a.date)} às ${a.time}. Esse horário já foi bloqueado para todos os clientes.`;
+   $('#successText').textContent=`${a.name}, seu ${s.name} na Barbearia Liedson está marcado para ${fmtDate(a.date)} às ${a.time}. Agora vamos abrir o WhatsApp para avisar o Liedson.`;
    closeModal('#bookingModal');openModal('#successModal');
+   setTimeout(()=>{window.location.href=whatsappUrl},900);
  }catch(err){
    alert(err.message||'Não foi possível concluir o agendamento.');
    setStep(2);await slots();
