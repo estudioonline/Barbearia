@@ -19,7 +19,7 @@
   </a>
   <nav>
     <a href="#servicos">Serviços</a>
-    <a href="#profissionais">Profissionais</a>
+    <a href="#profissionais">Profissional</a>
     <a href="#contato">Contato</a>
     <button class="btn btn-outline" id="adminOpen">Área do barbeiro</button>
   </nav>
@@ -31,15 +31,15 @@
     <div class="hero-inner">
       <p class="kicker">BARBEARIA • ESTILO • PONTUALIDADE</p>
       <h1>Seu estilo.<br>Seu horário.</h1>
-      <p class="hero-copy">Agende seu atendimento em poucos passos. Escolha o serviço, o profissional e o melhor horário para você.</p>
+      <p class="hero-copy">Agende seu atendimento com Liedson em poucos passos. Escolha o serviço, o dia e um horário disponível.</p>
       <div class="hero-actions">
         <button class="btn btn-white btn-lg" data-book>Agendar agora</button>
         <a class="btn btn-dark btn-lg" href="#servicos">Ver serviços</a>
       </div>
       <div class="hero-info">
+        <div><b>Liedson</b><span>Proprietário e barbeiro</span></div>
         <div><b>Seg–Sáb</b><span>09h às 19h</span></div>
-        <div><b>Online</b><span>Agendamento rápido</span></div>
-        <div><b>Fácil</b><span>Funciona no celular</span></div>
+        <div><b>Online</b><span>Agenda com bloqueio de horários</span></div>
       </div>
     </div>
   </section>
@@ -47,27 +47,27 @@
   <section class="section intro">
     <p class="kicker dark">ATENDIMENTO PROFISSIONAL</p>
     <h2>Sem fila. Sem complicação.</h2>
-    <p>Uma experiência simples para quem quer cuidar do visual e do tempo.</p>
+    <p>Atendimento individual com Liedson, com horários organizados para manter conforto, qualidade e pontualidade.</p>
   </section>
 
   <section class="section gray" id="servicos">
     <div class="section-title">
       <div><p class="kicker dark">SERVIÇOS</p><h2>Escolha seu atendimento</h2></div>
-      <p>Valores iniciais de demonstração. Depois podemos editar nome, preço e duração.</p>
+      <p>Os cortes são planejados com cerca de 40 a 50 minutos por cliente, evitando sobreposição de horários.</p>
     </div>
     <div class="service-grid" id="serviceGrid"></div>
   </section>
 
   <section class="section" id="profissionais">
     <div class="section-title">
-      <div><p class="kicker dark">PROFISSIONAIS</p><h2>Escolha seu barbeiro</h2></div>
-      <p>Cada profissional pode ter sua própria agenda e disponibilidade.</p>
+      <div><p class="kicker dark">PROFISSIONAL</p><h2>Liedson</h2></div>
+      <p>Proprietário da barbearia e único profissional responsável pelos atendimentos e pela agenda.</p>
     </div>
     <div class="barber-grid" id="barberGrid"></div>
   </section>
 
   <section class="booking-banner">
-    <div><p class="kicker">AGENDE EM MINUTOS</p><h2>Pronto para renovar o visual?</h2><p>Escolha um horário disponível e confirme seu atendimento.</p></div>
+    <div><p class="kicker">AGENDE EM MINUTOS</p><h2>Pronto para renovar o visual?</h2><p>Ao confirmar um horário, ele deixa de ficar disponível para outro agendamento.</p></div>
     <button class="btn btn-white btn-lg" data-book>Escolher horário</button>
   </section>
 
@@ -75,9 +75,10 @@
     <div>
       <p class="kicker dark">CONTATO</p>
       <h2>Informações da barbearia</h2>
-      <p class="muted">Os dados abaixo são demonstrativos e podem ser substituídos pelos dados reais.</p>
+      <p class="muted">Os dados abaixo podem ser substituídos pelos dados reais da barbearia.</p>
     </div>
     <div class="contact-card">
+      <div><span>Profissional</span><strong>Liedson</strong></div>
       <div><span>Horário</span><strong>Segunda a sábado • 09h às 19h</strong></div>
       <div><span>WhatsApp</span><strong>(00) 00000-0000</strong></div>
       <div><span>Endereço</span><strong>Adicionar endereço da barbearia</strong></div>
@@ -85,7 +86,7 @@
   </section>
 </main>
 
-<footer><span>© <span id="year"></span> Jaimess Barbearia</span><span>Agendamento online</span></footer>
+<footer><span>© <span id="year"></span> Jaimess Barbearia</span><span>Agenda de Liedson</span></footer>
 
 <div class="modal" id="bookingModal" aria-hidden="true">
   <div class="modal-card">
@@ -134,9 +135,9 @@
   <div class="modal-card admin-card">
     <button class="modal-close" data-close-admin aria-label="Fechar">×</button>
     <div id="adminLogin">
-      <p class="kicker dark">ÁREA DO BARBEIRO</p>
+      <p class="kicker dark">ÁREA DO LIEDSON</p>
       <h2>Acessar agenda</h2>
-      <p class="muted">Painel demonstrativo desta primeira versão.</p>
+      <p class="muted">Painel demonstrativo da agenda da barbearia.</p>
       <form id="loginForm">
         <label>E-mail<input id="adminEmail" type="email" placeholder="admin@barbearia.com" required></label>
         <label>Senha<input id="adminPass" type="password" placeholder="••••••••" required></label>
@@ -145,7 +146,7 @@
       <small class="hint">Acesso de teste: admin@barbearia.com / 123456</small>
     </div>
     <div id="adminPanel" class="hidden">
-      <div class="admin-head"><div><p class="kicker dark">AGENDA</p><h2>Horários marcados</h2></div><button class="btn btn-light" id="logout">Sair</button></div>
+      <div class="admin-head"><div><p class="kicker dark">AGENDA DO LIEDSON</p><h2>Horários marcados</h2></div><button class="btn btn-light" id="logout">Sair</button></div>
       <div id="appointmentList" class="appointments"></div>
     </div>
   </div>
