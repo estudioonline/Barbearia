@@ -82,19 +82,36 @@ async function loadAdmin(){
      const s=services.find(x=>x.id===a.service_id);
      const time=fromMinutes(a.start_minute);
      const done=a.status==='concluido';
-     return `<div class="appointment ${done?'completed':''}">
+     const cancelled=a.status==='cancelado';
+     const statusText=done?'Concluído':cancelled?'Cancelado':'Agendado';
+     const statusClass=done?'done':cancelled?'cancelled':'pending';
+     return `<div class="appointment ${done?'completed':cancelled?'cancelled-row':''}">
        <div>
-         <div class="appt-top"><strong>${fmtDate(a.appointment_date)} • ${time} — ${a.customer_name}</strong><span class="status ${done?'done':'pending'}">${done?'Concluído':'Agendado'}</span></div>
+         <div class="appt-top"><strong>${fmtDate(a.appointment_date)} • ${time} — ${a.customer_name}</strong><span class="status ${statusClass}">${statusText}</span></div>
          <small>${s?.name||a.service_id} • ${a.duration_minutes} min<br>WhatsApp: ${a.phone}</small>
        </div>
-       ${done?'':`<button class="complete-btn" data-complete="${a.id}">Concluir atendimento</button>`}
+       ${done||cancelled?'':`<div class="admin-actions"><button class="complete-btn" data-complete="${a.id}">Concluir</button><button class="cancel-btn" data-cancel="${a.id}" data-phone="${a.phone}" data-name="${a.customer_name}" data-date="${a.appointment_date}" data-time="${time}" data-service="${s?.name||a.service_id}">Cancelar</button></div>`}
      </div>`;
    }).join(''):'<div class="empty">Nenhum agendamento encontrado.</div>';
-   $$('[data-complete]').forEach(btn=>btn.onclick=async()=>{
+   $('[data-complete]').forEach(btn=>btn.onclick=async()=>{
      if(!confirm('Marcar este atendimento como concluído?')) return;
      btn.disabled=true;btn.textContent='Salvando...';
      try{await api({action:'complete',pin:adminPin,id:btn.dataset.complete});await loadAdmin()}
-     catch(err){alert(err.message);btn.disabled=false;btn.textContent='Concluir atendimento'}
+     catch(err){alert(err.message);btn.disabled=false;btn.textContent='Concluir'}
+   });
+   $('[data-cancel]').forEach(btn=>btn.onclick=async()=>{
+     if(!confirm('Cancelar este agendamento? O horário ficará disponível novamente.')) return;
+     btn.disabled=true;btn.textContent='Cancelando...';
+     try{
+       await api({action:'cancel',pin:adminPin,id:btn.dataset.cancel});
+       let phone=String(btn.dataset.phone||'').replace(/\D/g,'');
+       if(phone.length===10||phone.length===11) phone='55'+phone;
+       const msg=`Olá, ${btn.dataset.name}. Aqui é da Barbearia Liedson. Seu agendamento de ${btn.dataset.service} para ${fmtDate(btn.dataset.date)} às ${btn.dataset.time} precisou ser cancelado. Pedimos desculpas pelo transtorno.`;
+       await loadAdmin();
+       if(phone) window.open('https://wa.me/'+phone+'?text='+encodeURIComponent(msg),'_blank');
+     }catch(err){
+       alert(err.message);btn.disabled=false;btn.textContent='Cancelar';
+     }
    });
  }catch(err){
    $('#appointmentList').innerHTML=`<div class="empty">${err.message}</div>`;
