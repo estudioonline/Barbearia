@@ -2,7 +2,10 @@ const services=[
 {id:'corte',name:'Corte Masculino',desc:'Corte personalizado com acabamento e finalização.',price:45,duration:50},
 {id:'barba',name:'Barba',desc:'Modelagem, acabamento e cuidado completo da barba.',price:35,duration:40},
 {id:'combo',name:'Corte + Barba',desc:'Experiência completa para renovar o visual.',price:70,duration:90},
-{id:'acabamento',name:'Acabamento',desc:'Pezinho, contorno e pequenos ajustes.',price:20,duration:30}
+{id:'acabamento',name:'Acabamento',desc:'Pezinho, contorno e pequenos ajustes.',price:20,duration:30},
+{id:'degrade',name:'Corte Degradê (teste)',desc:'Serviço de teste para visualizar a agenda.',price:55,duration:60},
+{id:'sobrancelha',name:'Sobrancelha (teste)',desc:'Serviço rápido de teste.',price:15,duration:15},
+{id:'pezinho',name:'Pezinho (teste)',desc:'Acabamento simples para teste.',price:15,duration:20}
 ];
 const barbers=[{id:'liedson',name:'Liedson',specialty:'Proprietário e barbeiro • cortes, barba e acabamento'}];
 const API='https://hncpyfvyffawdveidikl.supabase.co/functions/v1/barbearia-booking';
