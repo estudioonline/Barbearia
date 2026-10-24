@@ -154,6 +154,21 @@ $('#loginForm').onsubmit=async e=>{
    await loadAdmin();
  }catch(err){adminPin='';alert(err.message)}
 };
+$('#clearAgenda').onclick=async()=>{
+  if(!confirm('Tem certeza que deseja limpar toda a agenda? Todos os horários serão liberados.')) return;
+  const btn=$('#clearAgenda'); btn.disabled=true; btn.textContent='Limpando...';
+  try{
+    await api({action:'clear-all',pin:adminPin});
+    localStorage.removeItem(LAST_BOOKING_KEY);
+    renderLastBooking();
+    await loadAdmin();
+    alert('Agenda limpa com sucesso.');
+  }catch(err){
+    alert(err.message||'Não foi possível limpar a agenda.');
+  }finally{
+    btn.disabled=false; btn.textContent='Limpar agenda';
+  }
+};
 $('#logout').onclick=()=>{adminPin='';$('#adminPanel').classList.add('hidden');$('#adminLogin').classList.remove('hidden');$('#loginForm').reset()};
 $$('.modal').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('show')}));
 $('#year').textContent=new Date().getFullYear();render();renderLastBooking();
