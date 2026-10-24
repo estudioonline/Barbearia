@@ -97,18 +97,27 @@ async function loadAdmin(){
  try{
    const data=await api({action:'admin-list',pin:adminPin});
    const items=data.appointments||[];
-   const scheduled=items.filter(a=>a.status==='agendado');
-   const completed=items.filter(a=>a.status==='concluido');
-   const cancelled=items.filter(a=>a.status==='cancelado');
-   const total=scheduled.reduce((sum,a)=>{
-     const s=services.find(x=>x.id===a.service_id);
-     return sum+(s?.price||0);
-   },0);
+   const statusOrder={agendado:0,concluido:1,cancelado:2};
+   const ordered=[...items].sort((a,b)=>{
+     const sa=statusOrder[a.status]??9, sb=statusOrder[b.status]??9;
+     if(sa!==sb) return sa-sb;
+     if(a.appointment_date!==b.appointment_date) return a.appointment_date.localeCompare(b.appointment_date);
+     return a.start_minute-b.start_minute;
+   });
+   const scheduled=ordered.filter(a=>a.status==='agendado');
+   const completed=ordered.filter(a=>a.status==='concluido');
+   const cancelled=ordered.filter(a=>a.status==='cancelado');
+   const valueOf=a=>services.find(x=>x.id===a.service_id)?.price||0;
+   const scheduledTotal=scheduled.reduce((sum,a)=>sum+valueOf(a),0);
+   const completedTotal=completed.reduce((sum,a)=>sum+valueOf(a),0);
+   const cancelledTotal=cancelled.reduce((sum,a)=>sum+valueOf(a),0);
    $('#scheduledCount').textContent=String(scheduled.length);
    $('#completedCount').textContent=String(completed.length);
    $('#cancelledCount').textContent=String(cancelled.length);
-   $('#scheduledTotal').textContent=money(total);
-   $('#appointmentList').innerHTML=items.length?items.map(a=>{
+   $('#scheduledTotal').textContent=money(scheduledTotal);
+   $('#completedTotal').textContent=money(completedTotal);
+   $('#cancelledTotal').textContent=money(cancelledTotal);
+   $('#appointmentList').innerHTML=ordered.length?ordered.map(a=>{
      const s=services.find(x=>x.id===a.service_id);
      const time=fromMinutes(a.start_minute);
      const done=a.status==='concluido';
