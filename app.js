@@ -12,6 +12,15 @@ const money=n=>n.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
 const fmtDate=v=>new Date(v+'T12:00:00').toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'2-digit'});
 const toMinutes=t=>{const [h,m]=t.split(':').map(Number);return h*60+m};
 const fromMinutes=m=>String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0');
+const LAST_BOOKING_KEY='barbearia_liedson_last_booking';
+const saveLastBooking=data=>localStorage.setItem(LAST_BOOKING_KEY,JSON.stringify(data));
+const getLastBooking=()=>{try{return JSON.parse(localStorage.getItem(LAST_BOOKING_KEY)||'null')}catch{return null}};
+function renderLastBooking(){
+ const box=$('#bookingPreview'); if(!box) return;
+ const booking=getLastBooking();
+ if(!booking){box.innerHTML='<strong>Agendamento</strong><p>Nenhum agendamento confirmado ainda.</p>';return}
+ box.innerHTML=`<strong>Agendamento</strong><p><b>${booking.name}</b><br>${booking.service}<br>${fmtDate(booking.date)} às ${booking.time}</p>`;
+}
 let adminPin='';
 
 function render(){
@@ -105,6 +114,8 @@ $('#bookingForm').onsubmit=async e=>{
  const submit=e.submitter;if(submit){submit.disabled=true;submit.textContent='Confirmando...'}
  try{
    await api(a);
+   saveLastBooking({name:a.name,service:s.name,date:a.date,time:a.time});
+   renderLastBooking();
    $('#successText').textContent=`${a.name}, seu ${s.name} na Barbearia Liedson está agendado para ${fmtDate(a.date)} às ${a.time}. Seu horário foi reservado com sucesso.`;
    closeModal('#bookingModal');openModal('#successModal');
  }catch(err){alert(err.message);setStep(2);await slots()}
@@ -128,4 +139,4 @@ $('#loginForm').onsubmit=async e=>{
 };
 $('#logout').onclick=()=>{adminPin='';$('#adminPanel').classList.add('hidden');$('#adminLogin').classList.remove('hidden');$('#loginForm').reset()};
 $$('.modal').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('show')}));
-$('#year').textContent=new Date().getFullYear();render();
+$('#year').textContent=new Date().getFullYear();render();renderLastBooking();
