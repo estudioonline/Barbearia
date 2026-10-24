@@ -34,3 +34,20 @@ footer{background:#080808;color:#888;padding:26px max(22px,7vw);display:flex;jus
 .choice-icon{font:700 34px Oswald;color:#8e8e8e}.choice-card strong{font:700 24px Oswald;text-transform:uppercase}.choice-card small{font-size:12px;color:#bdbdbd}.choice-card:hover small{color:#555}
 .simple-info{gap:55px}
 @media(max-width:560px){.simple-nav{gap:6px}.simple-nav .btn{min-width:auto;padding:9px 11px;font-size:11px}.main-choice-grid{grid-template-columns:1fr}.simple-info{gap:28px}}
+
+.hero-info-block{display:flex;flex-direction:column;gap:8px;min-width:260px}
+.booking-preview{margin-top:10px;padding:14px 16px;border:1px solid rgba(255,255,255,.18);background:rgba(0,0,0,.35);border-radius:8px;max-width:320px}
+.booking-preview strong{display:block;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#fff;margin-bottom:6px}
+.booking-preview p{margin:0;font-size:13px;line-height:1.5;color:#d9d9d9}
+@media(max-width:560px){
+  .topbar{height:auto;padding:12px 15px;display:grid;grid-template-columns:auto 1fr;align-items:center;gap:10px}
+  .brand{min-width:0}.brand strong{font-size:13px;letter-spacing:.12em}
+  .simple-nav{grid-column:1/-1;width:100%;display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .simple-nav .btn{width:100%;min-width:0;padding:12px 10px;font-size:14px;justify-content:center}
+  .hero-inner{padding-top:40px}
+  .main-choice-grid{grid-template-columns:1fr;width:100%}
+  .choice-card{width:100%}
+  .hero-info.simple-info{flex-direction:column;align-items:flex-start;gap:20px}
+  .hero-info-block{width:100%}
+  .booking-preview{width:100%;max-width:none}
+}
