@@ -127,7 +127,7 @@
     <div class="check">✓</div>
     <h2>Agendamento confirmado</h2>
     <p id="successText"></p>
-    <a class="btn btn-black" id="whatsappConfirm" href="#" target="_blank" rel="noopener" style="display:none">Enviar confirmação no WhatsApp</a><button class="btn btn-light" data-close-success>Concluir</button>
+    <button class="btn btn-black" data-close-success>Concluir</button>
   </div>
 </div>
 
@@ -137,13 +137,12 @@
     <div id="adminLogin">
       <p class="kicker dark">ÁREA DO LIEDSON</p>
       <h2>Acessar agenda</h2>
-      <p class="muted">Painel demonstrativo da agenda da barbearia.</p>
+      <p class="muted">Digite o PIN do Liedson para visualizar e atualizar a agenda.</p>
       <form id="loginForm">
-        <label>E-mail<input id="adminEmail" type="email" placeholder="admin@barbearia.com" required></label>
-        <label>Senha<input id="adminPass" type="password" placeholder="••••••••" required></label>
+        <label>PIN<input id="adminPin" type="password" inputmode="numeric" maxlength="6" placeholder="••••••" required></label>
         <button class="btn btn-black full" type="submit">Entrar</button>
       </form>
-      <small class="hint">Acesso de teste: admin@barbearia.com / 123456</small>
+      <small class="hint">PIN inicial do Liedson: 581946</small>
     </div>
     <div id="adminPanel" class="hidden">
       <div class="admin-head"><div><p class="kicker dark">AGENDA DO LIEDSON</p><h2>Horários marcados</h2></div><button class="btn btn-light" id="logout">Sair</button></div>
