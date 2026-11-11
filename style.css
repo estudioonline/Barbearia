@@ -79,3 +79,27 @@ footer{background:#080808;color:#888;padding:26px max(22px,7vw);display:flex;jus
 .summary-done{background:#dff5e7;border-color:#8fc7a2;color:#185c31}
 .summary-cancelled{background:#f8dddd;border-color:#d89a9a;color:#8a1f1f}
 @media(max-width:760px){.admin-summary{grid-template-columns:1fr}.summary-card strong{font-size:20px}}
+
+
+.payment-breakdown{
+  margin-top:14px;
+  display:grid;
+  gap:8px;
+  padding-top:12px;
+  border-top:1px solid rgba(0,0,0,.12);
+}
+.payment-breakdown span{
+  display:flex;
+  justify-content:space-between;
+  gap:16px;
+  align-items:center;
+}
+.payment-breakdown span:nth-child(2){
+  font-size:1.05em;
+}
+.payment-note{
+  display:block;
+  margin-top:10px;
+  color:#666;
+  line-height:1.4;
+}
