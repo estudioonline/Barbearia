@@ -3,8 +3,7 @@ const services=[
 {id:'luzes',name:'LUZES',desc:'Atendimento de longa duração.',price:80,duration:300}
 ];
 const barbers=[{id:'liedson',name:'Liedson',specialty:'Proprietário e barbeiro • cortes, barba e acabamento'}];
-const API='https://hncpyfvyffawdveidikl.supabase.co/functions/v1/barbearia-booking';
-const API_KEY='sb_publishable_vuoGNU0lSuM9Trm7RqCoQQ_LyedLwMb';
+const API='/api';
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 const money=n=>n.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
 const fmtDate=v=>new Date(v+'T12:00:00').toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'2-digit'});
@@ -30,13 +29,13 @@ let step=1;
 function setStep(n){step=n;$$('.form-step').forEach(x=>x.classList.toggle('active',+x.dataset.step===n));$$('[data-dot]').forEach(x=>x.classList.toggle('active',+x.dataset.dot<=n));if(n===3)summary()}
 function resetBooking(){render();$('#bookingForm').reset();$('#slots').innerHTML='';$('#timeInput').value='';setStep(1)}
 async function api(body){
- const res=await fetch(API,{method:'POST',headers:{'Content-Type':'application/json',apikey:API_KEY},body:JSON.stringify(body)});
+ const res=await fetch(API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
  const data=await res.json();
  if(!res.ok) throw new Error(data.error||'Não foi possível concluir a operação.');
  return data;
 }
 async function getBusy(date){
- const res=await fetch(API+'?date='+encodeURIComponent(date),{headers:{apikey:API_KEY}});
+ const res=await fetch(API+'?date='+encodeURIComponent(date));
  if(!res.ok) throw new Error('Não foi possível consultar a agenda.');
  const data=await res.json(); return data;
 }
