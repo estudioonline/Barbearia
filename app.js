@@ -161,10 +161,15 @@ async function loadAdmin(){
      const cancelled=a.status==='cancelado';
      const statusText=done?'Concluído':cancelled?'Cancelado':'Agendado';
      const statusClass=done?'done':cancelled?'cancelled':'pending';
+     const split=paymentSplit(s?.price||0);
+     const paid=a.deposit_status==='paid'||a.payment_status==='paid';
+     const paymentLabel=paid?'Entrada paga':'Entrada pendente';
+     const paymentColor=paid?'#166534':'#991b1b';
      return `<div class="appointment ${done?'completed':cancelled?'cancelled-row':''}">
        <div>
          <div class="appt-top"><strong>${fmtDate(a.appointment_date)} • ${time} — ${a.customer_name}</strong><span class="status ${statusClass}">${statusText}</span></div>
          <small>${s?.name||a.service_id} • ${a.duration_minutes} min<br>WhatsApp: ${a.phone}</small>
+         <div class="payment-breakdown" style="margin-top:12px;font-size:14px"><span><b>Valor total</b><b>${money(s?.price||0)}</b></span><span><b>Entrada (50%)</b><b>${money(split.deposit)}</b></span><span><b>Restante</b><b>${money(split.balance)}</b></span><span><b>Status da entrada</b><b style="color:${paymentColor}">${paymentLabel}</b></span></div>
        </div>
        ${done||cancelled?'':`<div class="admin-actions"><button class="complete-btn" data-complete="${a.id}">Concluir</button><button class="cancel-btn" data-cancel="${a.id}" data-phone="${a.phone}" data-name="${a.customer_name}" data-date="${a.appointment_date}" data-time="${time}" data-service="${s?.name||a.service_id}">Cancelar</button></div>`}
      </div>`;
