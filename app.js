@@ -144,7 +144,7 @@ async function loadAdmin(){
        await api({action:'cancel',pin:adminPin,id:btn.dataset.cancel});
        let phone=String(btn.dataset.phone||'').replace(/\D/g,'');
        if(phone.length===10||phone.length===11) phone='55'+phone;
-       const msg=`Olá, ${btn.dataset.name}. Aqui é da Barbearia Liedson. Seu agendamento de ${btn.dataset.service} para ${fmtDate(btn.dataset.date)} às ${btn.dataset.time} precisou ser cancelado. Pedimos desculpas pelo transtorno.`;
+       const msg=`Olá, ${btn.dataset.name}. Aqui é da Barbearia Souza. Seu agendamento de ${btn.dataset.service} para ${fmtDate(btn.dataset.date)} às ${btn.dataset.time} precisou ser cancelado. Pedimos desculpas pelo transtorno.`;
        await loadAdmin();
        if(phone) window.open('https://wa.me/'+phone+'?text='+encodeURIComponent(msg),'_blank');
      }catch(err){
@@ -174,7 +174,7 @@ $('#bookingForm').onsubmit=async e=>{
    await api(a);
    saveLastBooking({name:a.name,service:s.name,date:a.date,time:a.time});
    renderLastBooking();
-   $('#successText').textContent=`${a.name}, seu ${s.name} na Barbearia Liedson está agendado para ${fmtDate(a.date)} às ${a.time}. Seu horário foi reservado com sucesso.`;
+   $('#successText').textContent=`${a.name}, seu ${s.name} na Barbearia Souza está agendado para ${fmtDate(a.date)} às ${a.time}. Seu horário foi reservado com sucesso.`;
    closeModal('#bookingModal');openModal('#successModal');
  }catch(err){alert(err.message);setStep(2);await slots()}
  finally{if(submit){submit.disabled=false;submit.textContent='Confirmar'}}
