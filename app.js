@@ -4,6 +4,29 @@ const services=[
 ];
 const barbers=[{id:'liedson',name:'Liedson',specialty:'Proprietário e barbeiro • cortes, barba e acabamento'}];
 const API='/api';
+const PAYMENT_API='/payment';
+let paymentConfig={enabled:false,provider:null,depositPercent:50};
+
+async function loadPaymentConfig(){
+ try{
+   const res=await fetch(PAYMENT_API,{headers:{'Accept':'application/json'}});
+   if(!res.ok) return;
+   const data=await res.json();
+   paymentConfig={
+     enabled:Boolean(data.enabled),
+     provider:data.provider||null,
+     depositPercent:Number(data.depositPercent||50)
+   };
+ }catch(err){
+   console.warn('Configuração de pagamento indisponível:',err);
+ }
+}
+const paymentSplit=price=>{
+ const percent=Number(paymentConfig.depositPercent||50);
+ const deposit=Math.round((Number(price||0)*percent/100)*100)/100;
+ const balance=Math.round((Number(price||0)-deposit)*100)/100;
+ return {percent,deposit,balance};
+};
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 const money=n=>n.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
 const fmtDate=v=>new Date(v+'T12:00:00').toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'2-digit'});
@@ -84,7 +107,22 @@ async function slots(){
 }
 function summary(){
  const s=services.find(x=>x.id===$('#serviceSelect').value);
- $('#summary').innerHTML=`<strong>Resumo</strong><br>${s?.name||''} • ${money(s?.price||0)} • ${s?.duration||''} min<br>Profissional: Liedson<br>${fmtDate($('#dateInput').value)} às ${$('#timeInput').value}`;
+ const split=paymentSplit(s?.price||0);
+ const paymentNote=paymentConfig.enabled
+   ? `<small class="payment-note">Para reservar, será solicitado o pagamento do sinal.</small>`
+   : `<small class="payment-note">Pagamento online em preparação. O gateway será conectado depois.</small>`;
+ $('#summary').innerHTML=`
+   <strong>Resumo</strong><br>
+   ${s?.name||''} • ${s?.duration||''} min<br>
+   Profissional: Liedson<br>
+   ${fmtDate($('#dateInput').value)} às ${$('#timeInput').value}
+   <div class="payment-breakdown">
+     <span><b>Valor total</b><b>${money(s?.price||0)}</b></span>
+     <span><b>Sinal (${split.percent}%)</b><b>${money(split.deposit)}</b></span>
+     <span><b>Restante no atendimento</b><b>${money(split.balance)}</b></span>
+   </div>
+   ${paymentNote}
+ `;
 }
 function valid(){
  if(step===1&&!$('#serviceSelect').value){alert('Selecione o serviço.');return false}
@@ -172,9 +210,10 @@ $('#bookingForm').onsubmit=async e=>{
  const submit=e.submitter;if(submit){submit.disabled=true;submit.textContent='Confirmando...'}
  try{
    await api(a);
-   saveLastBooking({name:a.name,service:s.name,date:a.date,time:a.time});
+   const split=paymentSplit(s.price);
+   saveLastBooking({name:a.name,service:s.name,date:a.date,time:a.time,total:s.price,deposit:split.deposit,balance:split.balance});
    renderLastBooking();
-   $('#successText').textContent=`${a.name}, seu ${s.name} na Barbearia Souza está agendado para ${fmtDate(a.date)} às ${a.time}. Seu horário foi reservado com sucesso.`;
+   $('#successText').textContent=`${a.name}, seu ${s.name} na Barbearia Souza está agendado para ${fmtDate(a.date)} às ${a.time}. Valor total ${money(s.price)}; sinal previsto de ${money(split.deposit)} (50%) e saldo de ${money(split.balance)} no atendimento.`;
    closeModal('#bookingModal');openModal('#successModal');
  }catch(err){alert(err.message);setStep(2);await slots()}
  finally{if(submit){submit.disabled=false;submit.textContent='Confirmar'}}
@@ -211,4 +250,4 @@ $('#clearAgenda').onclick=async()=>{
 };
 $('#logout').onclick=()=>{adminPin='';$('#adminPanel').classList.add('hidden');$('#adminLogin').classList.remove('hidden');$('#loginForm').reset()};
 $$('.modal').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('show')}));
-$('#year').textContent=new Date().getFullYear();render();renderLastBooking();
+$('#year').textContent=new Date().getFullYear();render();renderLastBooking();loadPaymentConfig();
