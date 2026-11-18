@@ -90,8 +90,8 @@
 
 <div class="modal" id="successModal" aria-hidden="true">
   <div class="modal-card success">
-    <div class="check">✓</div>
-    <h2>Agendamento confirmado</h2>
+    <div class="check" id="successIcon">✓</div>
+    <h2 id="successTitle">Agendamento confirmado</h2>
     <p id="successText"></p>
     <button class="btn btn-black" data-close-success>Concluir</button>
   </div>
@@ -105,7 +105,7 @@
       <h2>Acessar agenda</h2>
       <p class="muted">Digite o PIN do Liedson para visualizar e atualizar a agenda.</p>
       <form id="loginForm">
-        <label>PIN<input id="adminPin" type="password" inputmode="numeric" maxlength="6" placeholder="••••••" required></label>
+        <label>PIN<input id="adminPin" type="password" inputmode="numeric" maxlength="20" placeholder="••••••" required></label>
         <button class="btn btn-black full" type="submit">Entrar</button>
       </form>
       <small class="hint">Acesso restrito ao responsável pela barbearia.</small>
@@ -134,6 +134,6 @@
   </div>
 </div>
 
-<script src="app.js?v=20261024-4"></script>
+<script src="app.js?v=20261118-1"></script>
 </body>
 </html>

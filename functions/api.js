@@ -1,39 +1,30 @@
-const json = (data, status = 200) =>
-  new Response(JSON.stringify(data), {
-    status,
-    headers: {
-      "content-type": "application/json; charset=utf-8",
-      "cache-control": "no-store"
-    }
-  });
-
-const SERVICES = {
-  nevou: { duration: 300 },
-  luzes: { duration: 300 }
-};
-
-const ALLOWED_TIMES = {
-  "08:00": 480,
-  "13:00": 780
-};
+import {
+  SERVICES,
+  ALLOWED_TIMES,
+  SLOT_CAPACITY,
+  DAY_CAPACITY,
+  PAYMENT_WINDOW_MINUTES,
+  HOLD_MINUTES,
+  ACTIVE_STATUSES,
+  json,
+  depositFor,
+  paymentEnabled,
+  expireHolds
+} from "../lib/booking.js";
+import { createDepositPreference } from "../lib/mercadopago.js";
 
 const normalizePhone = (value) => String(value || "").replace(/\D/g, "");
 
-async function assertAdmin(body, env) {
-  const pin = String(body?.pin || "").trim();
+// O PIN vem só do secret ADMIN_PIN no Cloudflare. Sem ele, a área do barbeiro fica fechada.
+function assertAdmin(body, env) {
   const configuredPin = String(env.ADMIN_PIN || "").trim();
+  if (!configuredPin) throw new Error("ADMIN_NOT_CONFIGURED");
 
-  if (configuredPin) {
-    if (pin !== configuredPin) throw new Error("INVALID_PIN");
-    return;
-  }
-
-  const data = new TextEncoder().encode(pin);
-  const digest = await crypto.subtle.digest("SHA-256", data);
-  const hash = [...new Uint8Array(digest)].map(b => b.toString(16).padStart(2, "0")).join("");
-  const fallbackHash = "47588d4d1eb15937bd9afedf66978f629ddd502496e9eb9877d89622d8cf8186";
-
-  if (hash !== fallbackHash) throw new Error("INVALID_PIN");
+  const pin = String(body?.pin || "").trim();
+  if (pin.length !== configuredPin.length) throw new Error("INVALID_PIN");
+  let diff = 0;
+  for (let i = 0; i < pin.length; i++) diff |= pin.charCodeAt(i) ^ configuredPin.charCodeAt(i);
+  if (diff !== 0) throw new Error("INVALID_PIN");
 }
 
 async function availability(db, date) {
@@ -42,7 +33,7 @@ async function availability(db, date) {
       SELECT start_minute, COUNT(*) AS qty
       FROM appointments
       WHERE appointment_date = ?
-        AND status = 'agendado'
+        AND status IN ${ACTIVE_STATUSES}
       GROUP BY start_minute
     `)
     .bind(date)
@@ -65,7 +56,7 @@ async function availability(db, date) {
     date,
     slotCounts,
     total,
-    full: total >= 4
+    full: total >= DAY_CAPACITY
   };
 }
 
@@ -79,6 +70,7 @@ export async function onRequestGet(context) {
   }
 
   try {
+    await expireHolds(env.DB);
     return json(await availability(env.DB, date));
   } catch (error) {
     console.error("availability_error", error);
@@ -98,7 +90,8 @@ export async function onRequestPost(context) {
 
   try {
     if (body?.action === "admin-list") {
-      await assertAdmin(body, env);
+      assertAdmin(body, env);
+      await expireHolds(env.DB);
 
       const result = await env.DB
         .prepare(`
@@ -111,8 +104,14 @@ export async function onRequestPost(context) {
             customer_name,
             phone,
             status,
+            price,
+            deposit_amount,
+            deposit_status,
+            mp_payment_id,
+            expires_at,
             created_at
           FROM appointments
+          WHERE status != 'expirado'
           ORDER BY appointment_date ASC, start_minute ASC, created_at ASC
         `)
         .all();
@@ -121,7 +120,7 @@ export async function onRequestPost(context) {
     }
 
     if (body?.action === "complete" || body?.action === "cancel") {
-      await assertAdmin(body, env);
+      assertAdmin(body, env);
       const id = Number(body.id);
       if (!Number.isInteger(id) || id <= 0) {
         return json({ error: "Agendamento inválido." }, 400);
@@ -141,12 +140,14 @@ export async function onRequestPost(context) {
     }
 
     if (body?.action === "clear-all") {
-      await assertAdmin(body, env);
+      assertAdmin(body, env);
       await env.DB.prepare("DELETE FROM appointments").run();
       return json({ ok: true });
     }
 
-    const service = SERVICES[body?.service];
+    // ---- Novo agendamento ----
+    const serviceId = String(body?.service || "");
+    const service = SERVICES[serviceId];
     const date = String(body?.date || "");
     const time = String(body?.time || "");
     const name = String(body?.name || "").trim();
@@ -158,38 +159,95 @@ export async function onRequestPost(context) {
     if (name.length < 2 || name.length > 100) return json({ error: "Informe seu nome." }, 400);
     if (phone.length < 10 || phone.length > 13) return json({ error: "Informe um telefone válido." }, 400);
 
-    const current = await availability(env.DB, date);
-    if (current.full) {
-      return json({ error: "Este dia já atingiu o limite de 4 atendimentos." }, 409);
-    }
-    if ((current.slotCounts[time] || 0) >= 2) {
-      return json({ error: "Este horário já está lotado. Escolha outro." }, 409);
-    }
+    await expireHolds(env.DB);
 
-    const result = await env.DB
+    const withPayment = paymentEnabled(env);
+    const now = Date.now();
+    const holdUntil = new Date(now + HOLD_MINUTES * 60_000);
+    const payBy = new Date(now + PAYMENT_WINDOW_MINUTES * 60_000);
+    const deposit = depositFor(service.price);
+    const startMinute = ALLOWED_TIMES[time];
+
+    // Checagem de vaga e gravação na MESMA instrução: dois clientes ao mesmo
+    // tempo não conseguem passar do limite.
+    const insert = await env.DB
       .prepare(`
         INSERT INTO appointments (
-          service_id,
-          appointment_date,
-          start_minute,
-          duration_minutes,
-          customer_name,
-          phone,
-          status
+          service_id, appointment_date, start_minute, duration_minutes,
+          customer_name, phone, status, price, deposit_amount, deposit_status, expires_at
         )
-        VALUES (?, ?, ?, ?, ?, ?, 'agendado')
+        SELECT ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+        WHERE (
+          SELECT COUNT(*) FROM appointments
+          WHERE appointment_date = ? AND start_minute = ? AND status IN ${ACTIVE_STATUSES}
+        ) < ?
+        AND (
+          SELECT COUNT(*) FROM appointments
+          WHERE appointment_date = ? AND status IN ${ACTIVE_STATUSES}
+        ) < ?
       `)
       .bind(
-        body.service,
-        date,
-        ALLOWED_TIMES[time],
-        service.duration,
-        name,
-        phone
+        serviceId, date, startMinute, service.duration,
+        name, phone,
+        withPayment ? "aguardando_pagamento" : "agendado",
+        service.price,
+        deposit,
+        withPayment ? "pending" : "none",
+        withPayment ? holdUntil.toISOString() : null,
+        date, startMinute, SLOT_CAPACITY,
+        date, DAY_CAPACITY
       )
       .run();
 
-    return json({ ok: true, id: result.meta?.last_row_id ?? null }, 201);
+    if (!insert.meta?.changes) {
+      const current = await availability(env.DB, date);
+      if (current.full) {
+        return json({ error: "Este dia já atingiu o limite de 4 atendimentos." }, 409);
+      }
+      return json({ error: "Este horário já está lotado. Escolha outro." }, 409);
+    }
+
+    const id = insert.meta.last_row_id;
+
+    if (!withPayment) {
+      return json({ ok: true, id, status: "agendado" }, 201);
+    }
+
+    try {
+      const origin = new URL(request.url).origin;
+      const pref = await createDepositPreference(env, {
+        appointment: {
+          id,
+          service_id: serviceId,
+          appointment_date: date,
+          time,
+          customer_name: name,
+          deposit_amount: deposit
+        },
+        serviceName: service.name,
+        origin,
+        payBy
+      });
+
+      await env.DB
+        .prepare("UPDATE appointments SET mp_preference_id = ? WHERE id = ?")
+        .bind(String(pref.preferenceId), id)
+        .run();
+
+      return json({
+        ok: true,
+        id,
+        status: "aguardando_pagamento",
+        checkoutUrl: pref.checkoutUrl,
+        deposit,
+        expiresAt: payBy.toISOString()
+      }, 201);
+    } catch (error) {
+      // Não conseguiu abrir o pagamento: libera a vaga na hora.
+      console.error("mp_preference_error", error?.message, JSON.stringify(error?.details || null));
+      await env.DB.prepare("DELETE FROM appointments WHERE id = ?").bind(id).run();
+      return json({ error: "Não foi possível iniciar o pagamento. Tente novamente em instantes." }, 502);
+    }
   } catch (error) {
     if (error?.message === "INVALID_PIN") {
       return json({ error: "PIN incorreto." }, 401);

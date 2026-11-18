@@ -28,6 +28,7 @@ const paymentSplit=price=>{
  return {percent,deposit,balance};
 };
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const money=n=>n.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
 const fmtDate=v=>new Date(v+'T12:00:00').toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'2-digit'});
 const toMinutes=t=>{const [h,m]=t.split(':').map(Number);return h*60+m};
@@ -39,7 +40,8 @@ function renderLastBooking(){
  const box=$('#bookingPreview'); if(!box) return;
  const booking=getLastBooking();
  if(!booking){box.innerHTML='<strong>Agendamento</strong><p>Nenhum agendamento confirmado ainda.</p>';return}
- box.innerHTML=`<strong>Agendamento</strong><p><b>${booking.name}</b><br>${booking.service}<br>${fmtDate(booking.date)} às ${booking.time}</p>`;
+ const note=booking.pending?'<br><small>Aguardando pagamento do sinal</small>':'';
+ box.innerHTML=`<strong>Agendamento</strong><p><b>${esc(booking.name)}</b><br>${esc(booking.service)}<br>${fmtDate(booking.date)} às ${esc(booking.time)}${note}</p>`;
 }
 let adminPin='';
 
@@ -109,8 +111,10 @@ function summary(){
  const s=services.find(x=>x.id===$('#serviceSelect').value);
  const split=paymentSplit(s?.price||0);
  const paymentNote=paymentConfig.enabled
-   ? `<small class="payment-note">Para reservar, será solicitado o pagamento do sinal.</small>`
-   : `<small class="payment-note">Pagamento online em preparação. O gateway será conectado depois.</small>`;
+   ? `<small class="payment-note">Ao confirmar, você vai para o Mercado Pago pagar o sinal de ${money(split.deposit)} (Pix ou cartão). A vaga fica reservada por 30 minutos enquanto você paga.</small>`
+   : `<small class="payment-note">O pagamento é feito no atendimento.</small>`;
+ const submitBtn=$('#bookingForm button[type=submit]');
+ if(submitBtn) submitBtn.textContent=paymentConfig.enabled?'Pagar sinal':'Confirmar';
  $('#summary').innerHTML=`
    <strong>Resumo</strong><br>
    ${s?.name||''} • ${s?.duration||''} min<br>
@@ -134,7 +138,7 @@ async function loadAdmin(){
  try{
    const data=await api({action:'admin-list',pin:adminPin});
    const items=data.appointments||[];
-   const statusOrder={agendado:0,concluido:1,cancelado:2};
+   const statusOrder={agendado:0,aguardando_pagamento:1,concluido:2,cancelado:3};
    const ordered=[...items].sort((a,b)=>{
      const sa=statusOrder[a.status]??9, sb=statusOrder[b.status]??9;
      if(sa!==sb) return sa-sb;
@@ -159,19 +163,23 @@ async function loadAdmin(){
      const time=fromMinutes(a.start_minute);
      const done=a.status==='concluido';
      const cancelled=a.status==='cancelado';
-     const statusText=done?'Concluído':cancelled?'Cancelado':'Agendado';
+     const awaiting=a.status==='aguardando_pagamento';
+     const statusText=done?'Concluído':cancelled?'Cancelado':awaiting?'Aguardando pagamento':'Agendado';
      const statusClass=done?'done':cancelled?'cancelled':'pending';
-     const split=paymentSplit(s?.price||0);
-     const paid=a.deposit_status==='paid'||a.payment_status==='paid';
-     const paymentLabel=paid?'Entrada paga':'Entrada pendente';
-     const paymentColor=paid?'#166534':'#991b1b';
+     const price=Number(a.price||s?.price||0);
+     const deposit=a.deposit_amount!=null?Number(a.deposit_amount):paymentSplit(price).deposit;
+     const balance=Math.round((price-deposit)*100)/100;
+     const ds=a.deposit_status||'none';
+     const paymentLabel={paid:'Entrada paga',pending:'Aguardando pagamento',refunded:'Entrada estornada',expired:'Pagamento expirou',none:'Paga no atendimento'}[ds]||'Entrada pendente';
+     const paymentColor={paid:'#166534',pending:'#92400e',refunded:'#991b1b',expired:'#991b1b'}[ds]||'#525252';
+     const showDeposit=ds!=='none';
      return `<div class="appointment ${done?'completed':cancelled?'cancelled-row':''}">
        <div>
-         <div class="appt-top"><strong>${fmtDate(a.appointment_date)} • ${time} — ${a.customer_name}</strong><span class="status ${statusClass}">${statusText}</span></div>
-         <small>${s?.name||a.service_id} • ${a.duration_minutes} min<br>WhatsApp: ${a.phone}</small>
-         <div class="payment-breakdown" style="margin-top:12px;font-size:14px"><span><b>Valor total</b><b>${money(s?.price||0)}</b></span><span><b>Entrada (50%)</b><b>${money(split.deposit)}</b></span><span><b>Restante</b><b>${money(split.balance)}</b></span><span><b>Status da entrada</b><b style="color:${paymentColor}">${paymentLabel}</b></span></div>
+         <div class="appt-top"><strong>${fmtDate(a.appointment_date)} • ${time} — ${esc(a.customer_name)}</strong><span class="status ${statusClass}">${statusText}</span></div>
+         <small>${esc(s?.name||a.service_id)} • ${a.duration_minutes} min<br>WhatsApp: ${esc(a.phone)}</small>
+         <div class="payment-breakdown" style="margin-top:12px;font-size:14px"><span><b>Valor total</b><b>${money(price)}</b></span>${showDeposit?`<span><b>Entrada (50%)</b><b>${money(deposit)}</b></span><span><b>Restante</b><b>${money(balance)}</b></span>`:''}<span><b>Status da entrada</b><b style="color:${paymentColor}">${paymentLabel}</b></span></div>
        </div>
-       ${done||cancelled?'':`<div class="admin-actions"><button class="complete-btn" data-complete="${a.id}">Concluir</button><button class="cancel-btn" data-cancel="${a.id}" data-phone="${a.phone}" data-name="${a.customer_name}" data-date="${a.appointment_date}" data-time="${time}" data-service="${s?.name||a.service_id}">Cancelar</button></div>`}
+       ${done||cancelled?'':`<div class="admin-actions"><button class="complete-btn" data-complete="${a.id}">Concluir</button><button class="cancel-btn" data-cancel="${a.id}" data-phone="${esc(a.phone)}" data-name="${esc(a.customer_name)}" data-date="${esc(a.appointment_date)}" data-time="${time}" data-service="${esc(s?.name||a.service_id)}">Cancelar</button></div>`}
      </div>`;
    }).join(''):'<div class="empty">Nenhum agendamento encontrado.</div>';
    $$('[data-complete]').forEach(btn=>btn.onclick=async()=>{
@@ -213,16 +221,67 @@ $('#bookingForm').onsubmit=async e=>{
  const s=services.find(x=>x.id===$('#serviceSelect').value);
  const a={service:s.id,date:$('#dateInput').value,time:$('#timeInput').value,name:$('#nameInput').value.trim(),phone:$('#phoneInput').value.trim()};
  const submit=e.submitter;if(submit){submit.disabled=true;submit.textContent='Confirmando...'}
+ let redirecting=false;
  try{
-   await api(a);
+   const res=await api(a);
    const split=paymentSplit(s.price);
+   if(res.checkoutUrl){
+     saveLastBooking({id:res.id,pending:true,name:a.name,service:s.name,date:a.date,time:a.time,total:s.price,deposit:split.deposit,balance:split.balance});
+     redirecting=true;
+     if(submit) submit.textContent='Abrindo Mercado Pago...';
+     window.location.href=res.checkoutUrl;
+     return;
+   }
    saveLastBooking({name:a.name,service:s.name,date:a.date,time:a.time,total:s.price,deposit:split.deposit,balance:split.balance});
    renderLastBooking();
-   $('#successText').textContent=`${a.name}, seu ${s.name} na Barbearia Souza está agendado para ${fmtDate(a.date)} às ${a.time}. Valor total ${money(s.price)}; sinal previsto de ${money(split.deposit)} (50%) e saldo de ${money(split.balance)} no atendimento.`;
-   closeModal('#bookingModal');openModal('#successModal');
+   showResult('ok','Agendamento confirmado',`${a.name}, seu ${s.name} na Barbearia Souza está agendado para ${fmtDate(a.date)} às ${a.time}. Valor total ${money(s.price)}, pago no atendimento.`);
+   closeModal('#bookingModal');
  }catch(err){alert(err.message);setStep(2);await slots()}
- finally{if(submit){submit.disabled=false;submit.textContent='Confirmar'}}
+ finally{if(submit&&!redirecting){submit.disabled=false;submit.textContent=paymentConfig.enabled?'Pagar sinal':'Confirmar'}}
 };
+function showResult(kind,title,text){
+ $('#successIcon').textContent=kind==='ok'?'✓':kind==='wait'?'…':'!';
+ $('#successIcon').classList.toggle('warn',kind!=='ok');
+ $('#successTitle').textContent=title;
+ $('#successText').textContent=text;
+ openModal('#successModal');
+}
+// Volta do Mercado Pago: ?pagamento=sucesso|pendente|falha&agendamento=ID&payment_id=...
+async function handlePaymentReturn(){
+ const params=new URLSearchParams(location.search);
+ const result=params.get('pagamento');
+ const id=params.get('agendamento');
+ if(!result||!id) return;
+ history.replaceState(null,'',location.pathname);
+ const booking=getLastBooking();
+ const who=booking&&String(booking.id)===String(id)?booking:null;
+ const desc=who?`${who.service} em ${fmtDate(who.date)} às ${who.time}`:'seu horário';
+ showResult('wait','Confirmando pagamento...','Aguarde um instante enquanto consultamos o Mercado Pago.');
+ let info=null;
+ try{
+   const res=await fetch(PAYMENT_API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'confirm',id,payment_id:params.get('payment_id')||params.get('collection_id')||''})});
+   info=await res.json();
+   if(!res.ok) throw new Error(info.error||'Erro ao consultar pagamento.');
+ }catch(err){
+   showResult('warn','Não foi possível confirmar agora',`Se você concluiu o pagamento, ele será confirmado automaticamente em alguns minutos. Em caso de dúvida, chame a Barbearia Souza no WhatsApp.`);
+   return;
+ }
+ if(info.depositStatus==='paid'){
+   if(who){who.pending=false;saveLastBooking(who);renderLastBooking()}
+   const extra=who?` Restante de ${money(who.balance)} no atendimento.`:'';
+   showResult('ok','Agendamento confirmado',`Sinal recebido! ${desc} está garantido.${extra}`);
+ }else if(info.status==='aguardando_pagamento'){
+   const until=info.expiresAt?new Date(info.expiresAt).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}):'';
+   if(result==='falha'){
+     showResult('warn','Pagamento não concluído',`O pagamento não foi aprovado. Se quiser tentar de novo, faça um novo agendamento.`);
+   }else{
+     showResult('wait','Pagamento em processamento',`Assim que o Mercado Pago confirmar, ${desc} fica garantido. Pix costuma levar poucos segundos.${until?` A vaga fica reservada até ${until}.`:''}`);
+   }
+ }else{
+   if(who){localStorage.removeItem(LAST_BOOKING_KEY);renderLastBooking()}
+   showResult('warn','Reserva expirada','O tempo para pagar o sinal acabou e a vaga foi liberada. Faça um novo agendamento.');
+ }
+}
 $('[data-close-success]').onclick=()=>closeModal('#successModal');
 const openAdmin=()=>{openModal('#adminModal');$('#adminLogin').classList.remove('hidden');$('#adminPanel').classList.add('hidden');$('#loginForm').reset()};
 $('#adminOpen').onclick=openAdmin;
@@ -255,4 +314,4 @@ $('#clearAgenda').onclick=async()=>{
 };
 $('#logout').onclick=()=>{adminPin='';$('#adminPanel').classList.add('hidden');$('#adminLogin').classList.remove('hidden');$('#loginForm').reset()};
 $$('.modal').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('show')}));
-$('#year').textContent=new Date().getFullYear();render();renderLastBooking();loadPaymentConfig();
+$('#year').textContent=new Date().getFullYear();render();renderLastBooking();loadPaymentConfig();handlePaymentReturn();

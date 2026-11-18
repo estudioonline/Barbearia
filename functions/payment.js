@@ -1,34 +1,48 @@
-const json=(data,status=200)=>new Response(JSON.stringify(data),{status,headers:{"content-type":"application/json; charset=utf-8","cache-control":"no-store"}});
+import { json, paymentEnabled, applyPayment, DEPOSIT_PERCENT } from "../lib/booking.js";
+import { getPayment } from "../lib/mercadopago.js";
 
-export async function onRequestGet(context){
+// GET /payment → configuração pública do pagamento (usada pelo site).
+export async function onRequestGet(context) {
   const { env } = context;
   return json({
-    enabled: String(env.PAYMENT_ENABLED || "").toLowerCase() === "true",
+    enabled: paymentEnabled(env),
     provider: env.PAYMENT_PROVIDER || null,
-    depositPercent: 50
+    depositPercent: DEPOSIT_PERCENT
   });
 }
 
-export async function onRequestPost(context){
+// POST /payment { action: "confirm", id, payment_id? }
+// Chamado quando o cliente volta do Mercado Pago. Consulta o pagamento direto na
+// API (não confia nos parâmetros da URL) e devolve a situação do agendamento.
+// Funciona mesmo que o webhook atrase.
+export async function onRequestPost(context) {
   const { request, env } = context;
   let body;
-  try{ body=await request.json(); }catch{ return json({error:"Dados inválidos."},400); }
+  try { body = await request.json(); } catch { return json({ error: "Dados inválidos." }, 400); }
 
-  if(String(env.PAYMENT_ENABLED || "").toLowerCase() !== "true"){
-    return json({error:"Pagamento online ainda não está ativado."},503);
+  if (body?.action !== "confirm") return json({ error: "Ação inválida." }, 400);
+
+  const id = Number(body.id);
+  if (!Number.isInteger(id) || id <= 0) return json({ error: "Agendamento inválido." }, 400);
+
+  try {
+    const paymentId = String(body.payment_id || "");
+    if (paymentId && /^\d+$/.test(paymentId) && env.MP_ACCESS_TOKEN) {
+      const payment = await getPayment(env, paymentId);
+      if (String(payment.external_reference) === String(id)) {
+        await applyPayment(env.DB, payment);
+      }
+    }
+
+    const appt = await env.DB
+      .prepare("SELECT status, deposit_status, expires_at FROM appointments WHERE id = ?")
+      .bind(id)
+      .first();
+    if (!appt) return json({ error: "Agendamento não encontrado." }, 404);
+
+    return json({ id, status: appt.status, depositStatus: appt.deposit_status, expiresAt: appt.expires_at });
+  } catch (error) {
+    console.error("payment_confirm_error", error?.message, error?.details);
+    return json({ error: "Não foi possível consultar o pagamento." }, 502);
   }
-
-  const total=Number(body?.total);
-  if(!Number.isFinite(total) || total<=0) return json({error:"Valor inválido."},400);
-
-  const deposit=Math.round(total*0.5*100)/100;
-
-  return json({
-    ok:true,
-    status:"provider-pending",
-    provider:env.PAYMENT_PROVIDER || null,
-    amount:deposit,
-    currency:"BRL",
-    message:"Base pronta. Falta conectar o gateway escolhido."
-  });
 }

@@ -103,3 +103,5 @@ footer{background:#080808;color:#888;padding:26px max(22px,7vw);display:flex;jus
   color:#666;
   line-height:1.4;
 }
+
+.check.warn{background:#92400e}
