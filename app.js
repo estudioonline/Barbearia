@@ -111,7 +111,7 @@ function summary(){
  const s=services.find(x=>x.id===$('#serviceSelect').value);
  const split=paymentSplit(s?.price||0);
  const paymentNote=paymentConfig.enabled
-   ? `<small class="payment-note">Ao confirmar, você vai para o Mercado Pago pagar o sinal de ${money(split.deposit)} (Pix ou cartão). A vaga fica reservada por 30 minutos enquanto você paga.</small>`
+   ? `<small class="payment-note">Ao confirmar, você vai para o Mercado Pago pagar o sinal de ${money(split.deposit)} (Pix ou cartão). A vaga fica reservada por 40 minutos enquanto você paga.</small>`
    : `<small class="payment-note">O pagamento é feito no atendimento.</small>`;
  const submitBtn=$('#bookingForm button[type=submit]');
  if(submitBtn) submitBtn.textContent=paymentConfig.enabled?'Pagar sinal':'Confirmar';

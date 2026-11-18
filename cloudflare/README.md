@@ -28,8 +28,8 @@ Mudanças de variáveis só valem no próximo deploy (Deployments → ⋯ → Re
 ## Fluxo do sinal (Mercado Pago Checkout Pro)
 
 1. Cliente escolhe serviço/data/horário e clica em **Pagar sinal**.
-2. `POST /api` reserva a vaga como `aguardando_pagamento` (por 40 min) e cria a cobrança de 50% no Mercado Pago.
-3. O cliente paga (Pix ou cartão) no Mercado Pago; o link expira em 30 min.
+2. `POST /api` reserva a vaga como `aguardando_pagamento` (por 50 min) e cria a cobrança de 50% no Mercado Pago.
+3. O cliente paga (Pix ou cartão) no Mercado Pago; o link expira em 40 min (o Pix exige no mínimo 30 min).
 4. O Mercado Pago avisa `POST /payment-webhook` e o cliente volta para `/?pagamento=...`, que chama `POST /payment` (`action=confirm`).
    Nos dois casos o pagamento é consultado direto na API do Mercado Pago antes de marcar `Entrada paga`.
 5. Se não pagar a tempo, a vaga é liberada automaticamente (`expirado`).
